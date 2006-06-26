@@ -1,0 +1,16 @@
+Source: mg
+Section: editors
+Priority: important
+Maintainer: Trent Buck <trentbuck@gmail.com>
+Build-Depends: debhelper (>= 4.0.0), autotools-dev, libc6-dev, libncurses-dev
+Standards-Version: 3.6.2
+
+Package: mg
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: microscopic GNU Emacs-style editor
+ This program is intended to be a small, fast, and portable
+ editor for people who can't (or don't want to) run real
+ Emacs for one reason or another.  It is compatible with GNU
+ because there shouldn't be any reason to learn more than
+ one Emacs flavor.
