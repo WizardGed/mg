@@ -1,4 +1,4 @@
-/*	$OpenBSD: dired.c,v 1.39 2006/06/01 09:00:50 kjell Exp $	*/
+/*	$OpenBSD: dired.c,v 1.41 2006/07/25 08:27:09 kjell Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -248,7 +248,7 @@ d_del(int f, int n)
 	while (n--) {
 		if (llength(curwp->w_dotp) > 0)
 			lputc(curwp->w_dotp, 0, 'D');
-		if (lforw(curwp->w_dotp) != curbp->b_linep)
+		if (lforw(curwp->w_dotp) != curbp->b_headp)
 			curwp->w_dotp = lforw(curwp->w_dotp);
 	}
 	curwp->w_flag |= WFEDIT | WFMOVE;
@@ -265,7 +265,7 @@ d_undel(int f, int n)
 	while (n--) {
 		if (llength(curwp->w_dotp) > 0)
 			lputc(curwp->w_dotp, 0, ' ');
-		if (lforw(curwp->w_dotp) != curbp->b_linep)
+		if (lforw(curwp->w_dotp) != curbp->b_headp)
 			curwp->w_dotp = lforw(curwp->w_dotp);
 	}
 	curwp->w_flag |= WFEDIT | WFMOVE;
@@ -282,7 +282,7 @@ d_undelbak(int f, int n)
 	while (n--) {
 		if (llength(curwp->w_dotp) > 0)
 			lputc(curwp->w_dotp, 0, ' ');
-		if (lback(curwp->w_dotp) != curbp->b_linep)
+		if (lback(curwp->w_dotp) != curbp->b_headp)
 			curwp->w_dotp = lback(curwp->w_dotp);
 	}
 	curwp->w_doto = 0;
@@ -343,7 +343,7 @@ d_expunge(int f, int n)
 	struct line	*lp, *nlp;
 	char		 fname[NFILEN];
 
-	for (lp = lforw(curbp->b_linep); lp != curbp->b_linep; lp = nlp) {
+	for (lp = bfirstlp(curbp); lp != curbp->b_headp; lp = nlp) {
 		nlp = lforw(lp);
 		if (llength(lp) && lgetc(lp, 0) == 'D') {
 			switch (d_makename(lp, fname, sizeof(fname))) {
@@ -644,7 +644,7 @@ dired_(char *dname)
 		    strerror(errno));
 		return (NULL);
 	}
-	bp->b_dotp = lforw(bp->b_linep);	/* go to first line */
+	bp->b_dotp = bfirstlp(bp);
 	(void)strlcpy(bp->b_fname, dname, sizeof(bp->b_fname));
 	(void)strlcpy(bp->b_cwd, dname, sizeof(bp->b_cwd));
 	if ((bp->b_modes[1] = name_mode("dired")) == NULL) {

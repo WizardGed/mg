@@ -1,4 +1,4 @@
-/*	$OpenBSD: sysdef.h,v 1.13 2005/06/14 18:14:40 kjell Exp $	*/
+/*	$OpenBSD: sysdef.h,v 1.15 2006/08/01 22:16:03 jason Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-
+#include <signal.h>
 
 
 #define	KBLOCK		8192	/* Kill grow.			 */

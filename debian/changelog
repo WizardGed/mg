@@ -1,3 +1,18 @@
+mg (20060818-1) unstable; urgency=low
+
+  * New upstream release
+  * Set the priority to `optional'
+  * Added a menu entry (based on Zile's)
+  * Add mg to list of `editor' alternatives
+
+ -- Trent Buck <trentbuck@gmail.com>  Mon, 28 Aug 2006 16:47:11 +1000
+
+mg (20060709-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Trent Buck <trentbuck@gmail.com>  Mon, 10 Jul 2006 04:23:47 +1000
+
 mg (20060707-1) unstable; urgency=low
 
   * Initial release (Closes: #375408)

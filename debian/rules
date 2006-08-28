@@ -23,6 +23,10 @@ ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
 else
 	CFLAGS += -O2
 endif
+export CFLAGS
+
+CC = gcc
+export CC
 
 config.status: configure
 	dh_testdir
@@ -66,7 +70,7 @@ binary-arch: build install
 	dh_installdocs
 	dh_installexamples
 #	dh_install
-#	dh_installmenu
+	dh_installmenu
 #	dh_installdebconf	
 #	dh_installlogrotate
 #	dh_installemacsen

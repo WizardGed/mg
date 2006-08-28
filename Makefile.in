@@ -14,10 +14,7 @@ includedir=	$(prefix)/include
 mandir=		$(prefix)/share/man
 
 
-CC=		gcc
-CFLAGS=		-O2 -pipe
-CFLAGS+=	-g -Wall -Werror
-LDFLAGS= 	-lncurses
+LDFLAGS+= 	-lncurses
 
 INSTALL=	/usr/bin/install
 STRIP=		/usr/bin/strip
