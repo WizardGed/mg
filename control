@@ -1,6 +1,6 @@
 Source: mg
 Section: editors
-Priority: important
+Priority: optional
 Maintainer: Trent Buck <trentbuck@gmail.com>
 Build-Depends: debhelper (>= 4.0.0), autotools-dev, libc6-dev, libncurses-dev
 Standards-Version: 3.6.2

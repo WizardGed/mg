@@ -1,15 +1,17 @@
-Description: Upstream changes introduced in version 20060707-1
+Description: Upstream changes introduced in version 20060818-1
  This patch has been created by dpkg-source during the package build.
  Here's the last changelog entry, hopefully it gives details on why
  those changes were made:
  .
- mg (20060707-1) unstable; urgency=low
+ mg (20060818-1) unstable; urgency=low
  .
-   * Initial release (Closes: #375408)
+   * New upstream release
+   * Set the priority to `optional'
+   * Added a menu entry (based on Zile's)
+   * Add mg to list of `editor' alternatives
  .
  The person named in the Author field signed this changelog entry.
 Author: Trent Buck <trentbuck@gmail.com>
-Bug-Debian: http://bugs.debian.org/375408
 
 ---
 The information above should follow the Patch Tagging Guidelines, please
@@ -23,9 +25,9 @@ Forwarded: <no|not-needed|url proving that it has been forwarded>
 Reviewed-By: <name and email of someone who approved the patch>
 Last-Update: <YYYY-MM-DD>
 
---- mg-20060707.orig/Makefile.in
-+++ mg-20060707/Makefile.in
-@@ -11,7 +11,7 @@ prefix=		/usr/local
+--- mg-20060818.orig/Makefile.in
++++ mg-20060818/Makefile.in
+@@ -11,13 +11,10 @@ prefix=		/usr/local
  bindir=		$(prefix)/bin
  libdir=		$(prefix)/lib
  includedir=	$(prefix)/include
@@ -33,9 +35,16 @@ Last-Update: <YYYY-MM-DD>
 +mandir=		$(prefix)/share/man
  
  
- CC=		gcc
---- mg-20060707.orig/INSTALL
-+++ mg-20060707/INSTALL
+-CC=		gcc
+-CFLAGS=		-O2 -pipe
+-CFLAGS+=	-g -Wall -Werror
+-LDFLAGS= 	-lncurses
++LDFLAGS+= 	-lncurses
+ 
+ INSTALL=	/usr/bin/install
+ STRIP=		/usr/bin/strip
+--- mg-20060818.orig/INSTALL
++++ mg-20060818/INSTALL
 @@ -10,7 +10,7 @@ If you want to add compilerflags do it l
      make CFLAGS="-O2 -fstack-protector"
  
