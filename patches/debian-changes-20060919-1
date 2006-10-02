@@ -1,14 +1,11 @@
-Description: Upstream changes introduced in version 20060818-1
+Description: Upstream changes introduced in version 20060919-1
  This patch has been created by dpkg-source during the package build.
  Here's the last changelog entry, hopefully it gives details on why
  those changes were made:
  .
- mg (20060818-1) unstable; urgency=low
+ mg (20060919-1) unstable; urgency=low
  .
    * New upstream release
-   * Set the priority to `optional'
-   * Added a menu entry (based on Zile's)
-   * Add mg to list of `editor' alternatives
  .
  The person named in the Author field signed this changelog entry.
 Author: Trent Buck <trentbuck@gmail.com>
@@ -25,8 +22,8 @@ Forwarded: <no|not-needed|url proving that it has been forwarded>
 Reviewed-By: <name and email of someone who approved the patch>
 Last-Update: <YYYY-MM-DD>
 
---- mg-20060818.orig/Makefile.in
-+++ mg-20060818/Makefile.in
+--- mg-20060919.orig/Makefile.in
++++ mg-20060919/Makefile.in
 @@ -11,13 +11,10 @@ prefix=		/usr/local
  bindir=		$(prefix)/bin
  libdir=		$(prefix)/lib
@@ -43,14 +40,3 @@ Last-Update: <YYYY-MM-DD>
  
  INSTALL=	/usr/bin/install
  STRIP=		/usr/bin/strip
---- mg-20060818.orig/INSTALL
-+++ mg-20060818/INSTALL
-@@ -10,7 +10,7 @@ If you want to add compilerflags do it l
-     make CFLAGS="-O2 -fstack-protector"
- 
- 
--If you don't like the installation pathes you can change them like this:
-+If you don't like the installation paths you can change them like this:
- 
-     make install prefix=/usr mandir=/usr/share/man
- 
