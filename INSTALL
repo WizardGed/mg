@@ -10,7 +10,8 @@ If you want to add compilerflags do it like this:
     make CFLAGS="-O2 -fstack-protector"
 
 
-If you don't like the installation paths you can change them like this:
+If you don't like the installation path you can change them, for
+example, like this:
 
     make install prefix=/usr mandir=/usr/share/man
 

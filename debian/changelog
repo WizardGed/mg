@@ -1,3 +1,16 @@
+mg (20060919-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Trent Buck <trentbuck@gmail.com>  Mon,  2 Oct 2006 12:53:24 +1000
+
+mg (20060818-2) unstable; urgency=low
+
+  * control: Include homepage in description field.
+  * control: mention other editors in description field.
+
+ -- Trent Buck <trentbuck@gmail.com>  Thu,  7 Sep 2006 12:25:37 +1000
+
 mg (20060818-1) unstable; urgency=low
 
   * New upstream release
