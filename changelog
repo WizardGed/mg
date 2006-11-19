@@ -1,3 +1,13 @@
+mg (20061119-1) unstable; urgency=low
+
+  * New upstream release (Closes: #391827)
+  * control: provides editor (Closes: 396297)
+  * control: follow to latest Debian Policy
+  * control: remove explicit libc6-dev, see
+    http://lintian.debian.org/reports/Tdepends-on-build-essential-package-without-using-version.html
+
+ -- Trent Buck <trentbuck@gmail.com>  Sun, 19 Nov 2006 13:13:20 +1100
+
 mg (20060919-1) unstable; urgency=low
 
   * New upstream release
