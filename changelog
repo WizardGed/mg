@@ -1,3 +1,11 @@
+mg (20061222-1) unstable; urgency=low
+
+  * New upstream release
+  * watch: added (Closes: #402119)
+  * control: remove silly Suggests field
+
+ -- Trent Buck <trentbuck@gmail.com>  Sat, 23 Dec 2006 13:27:00 +1100
+
 mg (20061119-1) unstable; urgency=low
 
   * New upstream release (Closes: #391827)

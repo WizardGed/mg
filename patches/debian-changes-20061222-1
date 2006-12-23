@@ -1,20 +1,17 @@
-Description: Upstream changes introduced in version 20061119-1
+Description: Upstream changes introduced in version 20061222-1
  This patch has been created by dpkg-source during the package build.
  Here's the last changelog entry, hopefully it gives details on why
  those changes were made:
  .
- mg (20061119-1) unstable; urgency=low
+ mg (20061222-1) unstable; urgency=low
  .
-   * New upstream release (Closes: #391827)
-   * control: provides editor (Closes: 396297)
-   * control: follow to latest Debian Policy
-   * control: remove explicit libc6-dev, see
-     http://lintian.debian.org/reports/Tdepends-on-build-essential-package-without-using-version.html
+   * New upstream release
+   * watch: added (Closes: #402119)
+   * control: remove silly Suggests field
  .
  The person named in the Author field signed this changelog entry.
 Author: Trent Buck <trentbuck@gmail.com>
-Bug-Debian: http://bugs.debian.org/391827
-Bug-Debian: http://bugs.debian.org/396297
+Bug-Debian: http://bugs.debian.org/402119
 
 ---
 The information above should follow the Patch Tagging Guidelines, please
@@ -28,18 +25,18 @@ Forwarded: <no|not-needed|url proving that it has been forwarded>
 Reviewed-By: <name and email of someone who approved the patch>
 Last-Update: <YYYY-MM-DD>
 
---- mg-20061119.orig/Makefile.in
-+++ mg-20061119/Makefile.in
-@@ -11,13 +11,10 @@ prefix=		/usr/local
+--- mg-20061222.orig/Makefile.in
++++ mg-20061222/Makefile.in
+@@ -11,13 +11,9 @@ prefix=		/usr/local
  bindir=		$(prefix)/bin
  libdir=		$(prefix)/lib
  includedir=	$(prefix)/include
 -mandir=		$(prefix)/man
 +mandir=		$(prefix)/share/man
  
- 
+-
 -CC=		gcc
--CFLAGS=		-O2 -pipe
+-CFLAGS?=	-O2 -pipe
 -CFLAGS+=	-g -Wall -Werror
 -LDFLAGS= 	-lncurses
 +LDFLAGS+= 	-lncurses
