@@ -30,12 +30,10 @@ esac
 #	FKEYS		-- add support for function key sequences.
 #	XKEYS		-- use termcap function key definitions.
 #                          Warning: XKEYS and bsmap mode do _not_ get along.
-#	PREFIXREGION	-- enable function "prefix-region"
 #	REGEX		-- create regular expression functions
 
 cat << EOF > config.h
 #define FKEYS
-#define PREFIXREGION
 #define REGEX
 #define XKEYS
 EOF
@@ -76,7 +74,7 @@ cat << EOF > testfile.c
 int main(void)
 {strtonum(NULL, 1, 1, NULL);return 0;}
 EOF
-if gcc testfile.c -o testfile 2>&3; then
+if gcc -Wall testfile.c -o testfile 2>&3; then
     echo 'Found.'
 else
     echo 'Not Found, adding.'
@@ -91,7 +89,7 @@ cat << EOF > testfile.c
 int main(void)
 {strlcpy(NULL, NULL, 1);return 0;}
 EOF
-if gcc testfile.c -o testfile 2>&3; then
+if gcc -Wall testfile.c -o testfile 2>&3; then
     echo 'Found.'
 else
     echo 'Not Found, adding.'
@@ -152,8 +150,9 @@ if [ ! -r /usr/include/term.h ]; then
 	    extraflags="$extraflags -I/usr/$i/include"
 	    break
 	fi
-	echo 'Not found!'
-	echo 'If you know where term.h is, please email the author!'
+	echo 'Not found!' >&2
+	echo 'Do you have the ncurses devel package installed?' >&2
+	echo 'If you know where term.h is, please email the author!' >&2
 	exit 1
     done
 fi

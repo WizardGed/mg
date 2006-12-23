@@ -1,4 +1,4 @@
-/*	$OpenBSD: funmap.c,v 1.24 2006/06/01 09:00:50 kjell Exp $	*/
+/*	$OpenBSD: funmap.c,v 1.26 2006/12/21 18:06:02 kjell Exp $	*/
 /*
  * Copyright (c) 2001 Artur Grabowski <art@openbsd.org>.  All rights reserved.
  *
@@ -54,9 +54,7 @@ static struct funmap functnames[] = {
 	{gotobol, "beginning-of-line",},
 	{blinkparen, "blink-matching-paren",},
 	{showmatch, "blink-matching-paren-hack",},
-#ifdef BSMAP
 	{bsmap, "bsmap-mode",},
-#endif /* BSMAP */
 	{NULL, "c-x 4 prefix",},
 	{NULL, "c-x prefix",},
 #ifndef NO_MACRO
@@ -148,9 +146,7 @@ static struct funmap functnames[] = {
 	{openline, "open-line",},
 	{nextwind, "other-window",},
 	{overwrite_mode, "overwrite-mode",},
-#ifdef PREFIXREGION
 	{prefixregion, "prefix-region",},
-#endif /* PREFIXREGION */
 	{backline, "previous-line",},
 	{prevwind, "previous-window",},
 	{spawncli, "push-shell",},
@@ -186,9 +182,7 @@ static struct funmap functnames[] = {
 	{set_default_mode, "set-default-mode",},
 	{setfillcol, "set-fill-column",},
 	{setmark, "set-mark-command",},
-#ifdef PREFIXREGION
 	{setprefix, "set-prefix-string",},
-#endif /* PREFIXREGION */
 	{shrinkwind, "shrink-window",},
 #ifdef NOTAB
 	{space_to_tabstop, "space-to-tabstop",},

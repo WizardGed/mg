@@ -1,4 +1,4 @@
-/*	$OpenBSD: fileio.c,v 1.78 2006/09/19 05:52:23 otto Exp $	*/
+/*	$OpenBSD: fileio.c,v 1.79 2006/11/19 16:51:19 deraadt Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -113,14 +113,16 @@ ffputbuf(struct buffer *bp)
 {
 	struct line   *lp, *lp2, *lpend;
 	int	emptylines = 0;
-	int	ret;
 
 	lpend = bp->b_headp;
 
-	/* This stuff is to make sure there is exactly one trailing \n at the
-	 * end of the buffer. */
+	/*
+	 * This stuff is to make sure there is exactly one trailing \n at the
+	 * end of the buffer.
 
-	/* XXX make this stuff work with flags once we have them. */
+	 * Since I assume 99.99% of all files are best of with exactly one
+	 * trailing \n I'll make that the default behaviour, no questions asked.
+	 */
 
 	/* Scroll backwards to the last nonempty line. Stop if the buffer
 	 * contains only empty lines. */
@@ -133,37 +135,17 @@ ffputbuf(struct buffer *bp)
 		return(FIOERR);
 	else {
 		if (emptylines == 0) {
-			ret = eyorn("No newline at end of file, add one");
-			switch(ret) {
-			case(ABORT): /* c-g is pressed */
-			    return(FIOERR);
-			case(TRUE):
-			    lnewline_at(lback(lpend), llength(lback(lpend)));
-			    break;
-			default:
-				break;
-			}
+			lnewline_at(lback(lpend), llength(lback(lpend)));
 		} else if (emptylines > 1) {
-			ret = eyorn("Trailing newlines at end of file,"
-			    " remove them");
-			switch(ret) {
-			case(ABORT): /* c-g is pressed */
-			    return(FIOERR);
-			case(TRUE):
-			    /* Step to the desired end of the buffer. */
-			    lp = lforw(lp);
-			    lp = lforw(lp);
-			    /* And remove the remaining newlines, use extra
-			     * pointer to make sure we don't step on a freed
-			     * line. */
-			    while(lp != lpend) {
-				    lp2 = lforw(lp);
-				    lfree(lp);
-				    lp = lp2;
-			    }
-			    break;
-			default:
-				break;
+			/* Step to the desired end of the buffer. */
+			lp = lforw(lp);
+			lp = lforw(lp);
+			/* And remove the remaining newlines, use extra pointer
+			 * to make sure we don't step on a freed line. */
+			while(lp != lpend) {
+				lp2 = lforw(lp);
+				lfree(lp);
+				lp = lp2;
 			}
 		}
 	}
@@ -476,23 +458,26 @@ make_file_list(char *buf)
 	char		 prefixx[NFILEN + 1];
 
 	/*
-	 * We need three different strings: dir - the name of the directory
-	 * containing what the user typed. Must be a real unix file name,
-	 * e.g. no ~user, etc..  Must not end in /. prefix - the portion of
-	 * what the user typed that is before the names we are going to find
-	 * in the directory.  Must have a trailing / if the user typed it.
-	 * names from the directory. We open dir, and return prefix
+	 * We need three different strings:
+
+	 * dir - the name of the directory containing what the user typed.
+	 *  Must be a real unix file name, e.g. no ~user, etc..
+	 *  Must not end in /.
+	 * prefix - the portion of what the user typed that is before the
+	 *  names we are going to find in the directory.  Must have a
+	 * trailing / if the user typed it.
+	 * names from the directory - We open dir, and return prefix
 	 * concatenated with names.
 	 */
 
 	/* first we get a directory name we can look up */
 	/*
 	 * Names ending in . are potentially odd, because adjustname will
-	 * treat foo/.. as a reference to another directory, whereas we are
+	 * treat foo/bar/.. as a foo/, whereas we are
 	 * interested in names starting with ..
 	 */
 	len = strlen(buf);
-	if (buf[len - 1] == '.') {
+	if (len && buf[len - 1] == '.') {
 		buf[len - 1] = 'x';
 		dir = adjustname(buf, TRUE);
 		buf[len - 1] = '.';
@@ -504,7 +489,7 @@ make_file_list(char *buf)
 	 * If the user typed a trailing / or the empty string
 	 * he wants us to use his file spec as a directory name.
 	 */
-	if (buf[0] && buf[strlen(buf) - 1] != '/') {
+	if (len && buf[len - 1] != '/') {
 		file = strrchr(dir, '/');
 		if (file) {
 			*file = '\0';
@@ -532,7 +517,7 @@ make_file_list(char *buf)
 	 * SV files are fairly short.  For BSD, something more general would
 	 * be required.
 	 */
-	if ((preflen + MAXNAMLEN) > NFILEN)
+	if (preflen > NFILEN - MAXNAMLEN)
 		return (NULL);
 
 	/* loop over the specified directory, making up the list of files */

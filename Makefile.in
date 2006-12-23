@@ -13,7 +13,6 @@ libdir=		$(prefix)/lib
 includedir=	$(prefix)/include
 mandir=		$(prefix)/share/man
 
-
 LDFLAGS+= 	-lncurses
 
 INSTALL=	/usr/bin/install

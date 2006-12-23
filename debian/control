@@ -8,7 +8,6 @@ Standards-Version: 3.7.2
 Package: mg
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Suggests: zile, qemacs | qemacs-nox
 Provides: editor
 Description: microscopic GNU Emacs-style editor
  This program is intended to be a small, fast, and portable
