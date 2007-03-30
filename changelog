@@ -1,3 +1,11 @@
+mg (20070329-1) unstable; urgency=low
+
+  * New upstream release
+  * control (Description): tweak (Closes: #415267)
+  * copyright: updated
+
+ -- Trent Buck <trentbuck@gmail.com>  Fri, 30 Mar 2007 15:51:01 +1000
+
 mg (20070214-1) unstable; urgency=low
 
   * New upstream release
