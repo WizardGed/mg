@@ -1,9 +1,10 @@
 Source: mg
 Section: editors
 Priority: optional
-Maintainer: Trent Buck <trentbuck@gmail.com>
-Build-Depends: debhelper (>= 4.0.0), autotools-dev, libncurses-dev
-Standards-Version: 3.7.2
+Maintainer: Trent W. Buck <trentbuck@gmail.com>
+Build-Depends: debhelper (>= 5), cdbs, patchutils, libncurses-dev
+Standards-Version: 3.7.3
+Homepage: http://www.xs4all.nl/~hanb/software/mg/
 
 Package: mg
 Architecture: any
@@ -18,11 +19,9 @@ Description: microscopic GNU Emacs-style editor
  .
  Packages which provide editors with broadly similar goals include
  .
-   * e3,
-   * joe,
-   * jove and xjove
-   * ng-cjk, ng-cjk-canna and ng-latin,
-   * qemacs and qemacs-nox,
-   * zile,
- .
-  Homepage: http://www.xs4all.nl/~hanb/software/mg/
+   * e3;
+   * joe;
+   * jove and xjove;
+   * ng-cjk, ng-cjk-canna and ng-latin;
+   * qemacs and qemacs-nox; and
+   * zile
