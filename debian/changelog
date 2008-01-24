@@ -1,3 +1,35 @@
+mg (20070918-2) unstable; urgency=low
+
+  * Sponsored upload by Jens Peter Secher:
+    + compat: Bumped to version 5 in correspondence with dependencies.
+    + patches/manpage-hyphens.patch: Extend patch to escape minus signs.
+
+ -- Trent W. Buck <trentbuck@gmail.com>  Thu, 24 Jan 2008 21:12:00 +0100
+
+mg (20070918-1) UNRELEASED; urgency=low
+
+  * New upstream release
+  * rules, control: use cdbs.
+  * control (Build-Depends): remove erroneous autotools-dev dependency.
+  * control (Homepage): promote to source stanza (per dpkg 1.14.6).
+  * control (Description): tweak.
+  * control (Build-Depends): bump debhelper version appease linda.
+  * changelog (config.h): new unlicensed, unused stub added upstream.
+  * control (Standards-Version): upgrade to 3.7.3
+  * menu: fix menu-item-uses-apps-section.
+  * patches/445232.patch: document auto-execute (Closes: #445232)
+  * docs (.mg): add (Closes: #445233)
+  * patches/445234.patch: extend documentation (Closes: #445234)
+
+ -- Trent W. Buck <trentbuck@gmail.com>  Wed, 19 Dec 2007 19:17:27 +1100
+
+mg (20070529-1) unstable; urgency=low
+
+  * New upstream release
+  * control (Maintainer): add my middle initial.
+
+ -- Trent W. Buck <trentbuck@gmail.com>  Fri, 31 Aug 2007 12:50:20 +1000
+
 mg (20070329-1) unstable; urgency=low
 
   * New upstream release
