@@ -1,7 +1,7 @@
-diff -Nur mg-20070918/mg.1 mg-20070918.new/mg.1
---- mg-20070918/mg.1	2008-01-24 21:29:30.000000000 +0100
-+++ mg-20070918.new/mg.1	2008-01-24 21:29:48.000000000 +0100
-@@ -27,8 +27,8 @@
+diff -Nur -x '*.orig' -x '*~' mg-20080610/mg.1 mg-20080610.new/mg.1
+--- mg-20080610/mg.1	2008-06-13 17:41:47.284958916 +1000
++++ mg-20080610.new/mg.1	2008-06-13 17:42:40.436983476 +1000
+@@ -29,8 +29,8 @@
  Go to the line specified by number (do not insert
  a space between the "+" sign and the number).
  If a negative number is specified, the line number counts
@@ -9,6 +9,6 @@ diff -Nur mg-20070918/mg.1 mg-20070918.new/mg.1
 -line of the file, +-2 will be second last, and so on.
 +backwards from the end of the file i.e. +\-1 will be the last
 +line of the file, +\-2 will be second last, and so on.
- .It Fl f Ar <mode>
+ .It Fl f Ar mode
  Run the mode command for all buffers created from
  arguments on the command line, including the
