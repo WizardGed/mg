@@ -1,6 +1,6 @@
-.\"	$OpenBSD: mg.1,v 1.32 2007/05/31 19:20:13 jmc Exp $
+.\"	$OpenBSD: mg.1,v 1.36 2008/05/29 19:58:15 sobrado Exp $
 .\"
-.Dd $Mdocdate: July 4 2007 $
+.Dd $Mdocdate: June 10 2008 $
 .Dt MG 1
 .Os
 .Sh NAME
@@ -8,8 +8,10 @@
 .Nd emacs-like text editor
 .Sh SYNOPSIS
 .Nm mg
-.Op Ar options
-.Op Ar file ...
+.Op Fl n
+.Op Fl f Ar mode
+.Op + Ns Ar number
+.Op Ar
 .Sh DESCRIPTION
 .Nm
 is intended to be a small, fast, and portable editor for
@@ -23,13 +25,13 @@ be any reason to learn more editor types than emacs or
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
-.It Ar +number
+.It + Ns Ar number
 Go to the line specified by number (do not insert
 a space between the "+" sign and the number).
 If a negative number is specified, the line number counts
 backwards from the end of the file i.e. +-1 will be the last
 line of the file, +-2 will be second last, and so on.
-.It Fl f Ar <mode>
+.It Fl f Ar mode
 Run the mode command for all buffers created from
 arguments on the command line, including the
 scratch buffer and all files.

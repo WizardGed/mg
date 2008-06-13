@@ -1,3 +1,12 @@
+mg (20080610-1) unstable; urgency=low
+
+  * New upstream release
+    * funmap.c, funmap.h, grep.c: enter the Public Domain.
+  * rules (DM-Upload-Allowed): obviate the need for sponsors.
+  * control (Standards-Version): bump to 3.8.0; no changes needed.
+
+ -- Trent W. Buck <trentbuck@gmail.com>  Fri, 13 Jun 2008 17:20:08 +1000
+
 mg (20070918-2) unstable; urgency=low
 
   * Sponsored upload by Jens Peter Secher:
