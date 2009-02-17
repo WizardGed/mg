@@ -1,4 +1,4 @@
-/*	$OpenBSD: def.h,v 1.100 2007/05/28 17:52:17 kjell Exp $	*/
+/*	$OpenBSD: def.h,v 1.108 2008/09/15 16:13:35 kjell Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -276,7 +276,8 @@ struct buffer {
 #endif
 #define BFOVERWRITE 0x08		/* overwrite mode		 */
 #define BFREADONLY  0x10		/* read only mode		 */
-
+#define BFDIRTY     0x20		/* Buffer was modified elsewhere */
+#define BFIGNDIRTY  0x40		/* Ignore modifications */
 /*
  * This structure holds information about recent actions for the Undo command.
  */
@@ -401,13 +402,14 @@ int		 addlinef(struct buffer *, char *, ...);
 int		 anycb(int);
 int		 bclear(struct buffer *);
 int		 showbuffer(struct buffer *, struct mgwin *, int);
-int		 augbname(char *, char *, size_t);
+int		 augbname(char *, const char *, size_t);
 struct mgwin   *popbuf(struct buffer *);
 int		 bufferinsert(int, int);
 int		 usebuffer(int, int);
 int		 notmodified(int, int);
 int		 popbuftop(struct buffer *);
 int		 getbufcwd(char *, size_t);
+int		 checkdirty(struct buffer *);
 
 /* display.c */
 int		vtresize(int, int, int);
@@ -428,6 +430,7 @@ void		 free_file_list(struct list *);
 
 /* fileio.c */
 int		 ffropen(const char *, struct buffer *);
+void		 ffstat(struct buffer *);
 int		 ffwopen(const char *, struct buffer *);
 int		 ffclose(struct buffer *);
 int		 ffputbuf(struct buffer *);
@@ -438,6 +441,8 @@ char		*startupfile(char *);
 int		 copy(char *, char *);
 struct list	*make_file_list(char *);
 int		 fisdir(const char *);
+int		 fchecktime(struct buffer *);
+int		 fupdstat(struct buffer *);
 
 /* kbd.c X */
 int		 do_meta(int, int);
@@ -480,6 +485,7 @@ int		 back1page(int, int);
 int		 pagenext(int, int);
 void		 isetmark(void);
 int		 setmark(int, int);
+int		 clearmark(int, int);
 int		 swapmark(int, int);
 int		 gotoline(int, int);
 
@@ -492,6 +498,9 @@ int		 newline(int, int);
 int		 deblank(int, int);
 int		 justone(int, int);
 int		 delwhite(int, int);
+int		 delleadwhite(int, int);
+int		 deltrailwhite(int, int);
+int		 lfindent(int, int);
 int		 indent(int, int);
 int		 forwdel(int, int);
 int		 backdel(int, int);
@@ -604,12 +613,12 @@ int		 cntnonmatchlines(int, int);
 void		 free_undo_record(struct undo_rec *);
 int		 undo_dump(int, int);
 int		 undo_enabled(void);
-int		 undo_enable(int);
-void		 undo_add_boundary(void);
+int		 undo_enable(int, int);
+int		 undo_add_boundary(int, int);
 void		 undo_add_modified(void);
 int		 undo_add_insert(struct line *, int, int);
 int		 undo_add_delete(struct line *, int, int);
-void		 undo_boundary_enable(int);
+int		 undo_boundary_enable(int, int);
 int		 undo_add_change(struct line *, int, int);
 int		 undo(int, int);
 
@@ -620,10 +629,18 @@ int		 add_autoexec(const char *, const char *);
 
 /* mail.c X */
 void		 mail_init(void);
+/* cmode.c X */
+int		 cmode(int, int);
+int		 cc_brace(int, int);
+int		 cc_char(int, int);
+int		 cc_tab(int, int);
+int		 cc_indent(int, int);
+int		 cc_lfindent(int, int);
 
 /* grep.c X */
 int		 next_error(int, int);
 int		 globalwdtoggle(int, int);
+int		 compile(int, int);
 
 /*
  * Externals.
@@ -661,3 +678,4 @@ extern char		 prompt[];
 int		 tceeol;
 int		 tcinsl;
 int		 tcdell;
+int		 rptcount;	/* successive invocation count */

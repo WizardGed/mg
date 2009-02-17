@@ -1,4 +1,4 @@
-/*	$OpenBSD: grep.c,v 1.35 2008/06/10 00:19:31 kjell Exp $	*/
+/*	$OpenBSD: grep.c,v 1.36 2008/06/14 08:39:30 kjell Exp $	*/
 
 /* This file is in the public domain */
 
@@ -9,13 +9,7 @@
 #include <sys/types.h>
 #include <ctype.h>
 
-#ifdef __GLIBC__
-/* Nuts! */
-extern char * basename(const char *path);
-extern char *  dirname(const char *path);
-#else
-#include <libgen.h>
-#endif
+#include "libgen.h"
 
 #include <time.h>
 
@@ -23,7 +17,6 @@ int	 globalwd = FALSE;
 static int	 compile_goto_error(int, int);
 int		 next_error(int, int);
 static int	 grep(int, int);
-static int	 compile(int, int);
 static int	 gid(int, int);
 static struct buffer	*compile_mode(const char *, const char *);
 static int	 xlint(int, int);
@@ -115,7 +108,7 @@ xlint(int f, int n)
 }
 
 /* ARGSUSED */
-static int
+int
 compile(int f, int n)
 {
 	char	 cprompt[NFILEN], *bufp;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: file.c,v 1.65 2008/03/21 08:01:20 pyr Exp $	*/
+/*	$OpenBSD: file.c,v 1.69 2008/09/15 16:13:35 kjell Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -6,15 +6,10 @@
  *	File commands.
  */
 
-#ifdef __GLIBC__
-/* Nuts! */
-extern char * basename(const char *path);
-extern char *  dirname(const char *path);
-#else
-#include <libgen.h>
-#endif
-
+#include "libgen.h"
 #include "def.h"
+
+static char *xdirname(const char *);
 
 /*
  * Insert a file into the current buffer.  Real easy - just call the
@@ -294,9 +289,10 @@ insertfile(char *fname, char *newname, int replacebuf)
 	int	 nbytes, s, nline = 0, siz, x, x2;
 	int	 opos;			/* offset we started at */
 	int	 oline;			/* original line number */
+	char *dp;
 
 	if (replacebuf == TRUE)
-		x = undo_enable(FALSE);
+		x = undo_enable(FFRAND, 0);
 	else
 		x = undo_enabled();
 
@@ -312,9 +308,10 @@ insertfile(char *fname, char *newname, int replacebuf)
 	bp = curbp;
 	if (newname != NULL) {
 		(void)strlcpy(bp->b_fname, newname, sizeof(bp->b_fname));
-		(void)strlcpy(bp->b_cwd, dirname(newname),
-		    sizeof(bp->b_cwd));
+		dp = xdirname(newname);
+		(void)strlcpy(bp->b_cwd, dp, sizeof(bp->b_cwd));
 		(void)strlcat(bp->b_cwd, "/", sizeof(bp->b_cwd));
+		free(dp);
 	}
 
 	/* hard file open */
@@ -337,12 +334,14 @@ insertfile(char *fname, char *newname, int replacebuf)
 		killbuffer(bp);
 		if ((bp = dired_(fname)) == NULL)
 			return (FALSE);
-		undo_enable(x);
+		undo_enable(FFRAND, x);
 		curbp = bp;
 		return (showbuffer(bp, curwp, WFFULL | WFMODE));
 	} else {
-		(void)strlcpy(bp->b_cwd, dirname(fname), sizeof(bp->b_cwd));
+		dp = xdirname(fname);
+		(void)strlcpy(bp->b_cwd, dp, sizeof(bp->b_cwd));
 		(void)strlcat(bp->b_cwd, "/", sizeof(bp->b_cwd));
+		free(dp);
 	}
 	opos = curwp->w_doto;
 	oline = curwp->w_dotline;
@@ -351,10 +350,10 @@ insertfile(char *fname, char *newname, int replacebuf)
 	 * We will delete this newline after insertion.
 	 * Disable undo, as we create the undo record manually.
 	 */
-	x2 = undo_enable(FALSE);
+	x2 = undo_enable(FFRAND, 0);
 	(void)lnewline();
 	olp = lback(curwp->w_dotp);
-	undo_enable(x2);
+	undo_enable(FFRAND, x2);
 
 	nline = 0;
 	siz = 0;
@@ -477,7 +476,7 @@ out:		lp2 = NULL;
 	}
 	bp->b_lines += nline;
 cleanup:
-	undo_enable(x);
+	undo_enable(FFRAND, x);
 
 	/* return FALSE if error */
 	return (s != FIOERR);
@@ -514,10 +513,10 @@ filewrite(int f, int n)
 		(void)strlcpy(curbp->b_fname, adjfname, sizeof(curbp->b_fname));
 		if (getbufcwd(curbp->b_cwd, sizeof(curbp->b_cwd)) != TRUE)
 			(void)strlcpy(curbp->b_cwd, "/", sizeof(curbp->b_cwd));
-		free(curbp->b_bname);
 		if (augbname(bn, basename(curbp->b_fname), sizeof(bn))
 		    == FALSE)
 			return (FALSE);
+		free(curbp->b_bname);
 		if ((curbp->b_bname = strdup(bn)) == NULL)
 			return (FALSE);
 		curbp->b_flag &= ~(BFBAK | BFCHG);
@@ -564,6 +563,14 @@ buffsave(struct buffer *bp)
 	if (bp->b_fname[0] == '\0') {
 		ewprintf("No file name");
 		return (FALSE);
+	}
+
+	/* Ensure file has not been modified elsewhere */
+	/* We don't use the ignore flag here */
+	if (fchecktime(bp) != TRUE) {
+		if ((s = eyesno("File has changed on disk since last save. "
+		    "Save anyway")) != TRUE)
+			return (s);
 	}
 
 	if (makebackup && (bp->b_flag & BFBAK)) {
@@ -632,6 +639,7 @@ writeout(struct buffer *bp, char *fn)
 	} else
 		/* ignore close error if it is a write error */
 		(void)ffclose(bp);
+	(void)fupdstat(bp);
 	return (s == FIOSUC);
 }
 
@@ -647,4 +655,23 @@ upmodes(struct buffer *bp)
 	for (wp = wheadp; wp != NULL; wp = wp->w_wndp)
 		if (bp == NULL || curwp->w_bufp == bp)
 			wp->w_flag |= WFMODE;
+}
+
+/*
+ * Same as dirname, except an empty string is returned in
+ * place of "/". This means we can always add a trailing
+ * slash and be correct.
+ * Unlike dirname, we allocate. Caller must free.
+ */
+static char *
+xdirname(const char *path)
+{
+	char *dp;
+
+	dp = strdup(path);
+	dp = dirname(dp);
+	if (*dp && dp[0] == '/' && dp[1] == '\0')
+		return (strdup(""));
+
+	return (strdup(dp));
 }

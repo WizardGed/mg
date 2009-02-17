@@ -187,7 +187,14 @@ charswaiting(void)
 {
 	int	x;
 
-	return ((ioctl(0, FIONREAD, &x) < 0) ? 0 : x);
+#ifdef FIONREAD
+
+	return ((ioctl(STDIN_FILENO, FIONREAD, &x) < 0) ? 0 : x);
+
+#else   /* For platforms that don't have FIONREAD */
+
+	return ((ioctl(STDIN_FILENO, TIOCINQ, &x) < 0) ? 0 : x);
+#endif
 }
 
 /*

@@ -6,13 +6,7 @@
  * by Robert A. Larson
  */
 
-#ifdef __GLIBC__
-/* Nuts! */
-extern char * basename(const char *path);
-extern char *  dirname(const char *path);
-#else
-#include <libgen.h>
-#endif
+#include "libgen.h"
 
 #include "def.h"
 #include "funmap.h"
@@ -620,10 +614,20 @@ dired_(char *dname)
 	bp->b_flag |= BFREADONLY;
 
 #ifdef GNU_LS
+# ifdef __CYGWIN__
+	/* On Windows platforms the user or group name can be two
+	 * words, such as "Domain Users" or "First Last." So, we must
+	 * use the --numeric-uid-gid option of ls, or else we don't
+	 * know where the filename starts.
+	 */
 	ret = snprintf(line, sizeof(line),
-	    "ls -al --time-style='+%%b %%d %%H:%%M' %s", dname);
+	    "ls -aln --time-style='+%%b %%d %%H:%%M' '%s'", dname);
+# else
+	ret = snprintf(line, sizeof(line),
+	    "ls -al --time-style='+%%b %%d %%H:%%M' '%s'", dname);
+# endif
 #else
-	ret = snprintf(line, sizeof(line), "ls -al %s", dname);
+	ret = snprintf(line, sizeof(line), "ls -al '%s'", dname);
 #endif /* GNU_LS */
 
 	if (ret < 0 || ret  >= sizeof(line)) {

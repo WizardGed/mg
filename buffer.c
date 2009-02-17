@@ -1,4 +1,4 @@
-/*	$OpenBSD: buffer.c,v 1.67 2007/05/28 17:52:17 kjell Exp $	*/
+/*	$OpenBSD: buffer.c,v 1.68 2008/09/15 16:11:35 kjell Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -6,15 +6,7 @@
  *		Buffer handling.
  */
 
-#ifdef __GLIBC__
-/* Nuts! */
-extern char * basename(const char *path);
-extern char *  dirname(const char *path);
-#else
-#include <libgen.h>
-#endif
-
-
+#include "libgen.h"
 #include <stdarg.h>
 
 #include "def.h"
@@ -30,6 +22,10 @@ extern int globalwd;
 int
 togglereadonly(int f, int n)
 {
+	int s;
+
+	if ((s = checkdirty(curbp)) != TRUE)
+		return (s);
 	if (!(curbp->b_flag & BFREADONLY))
 		curbp->b_flag |= BFREADONLY;
 	else {
@@ -580,13 +576,17 @@ bclear(struct buffer *bp)
 
 /*
  * Display the given buffer in the given window. Flags indicated
- * action on redisplay.
+ * action on redisplay. Update modified flag so insert loop can check it.
  */
 int
 showbuffer(struct buffer *bp, struct mgwin *wp, int flags)
 {
 	struct buffer	*obp;
 	struct mgwin	*owp;
+
+	/* Ensure file has not been modified elsewhere */
+	if (fchecktime(bp) != TRUE)
+		bp->b_flag |= BFDIRTY;
 
 	if (wp->w_bufp == bp) {	/* Easy case! */
 		wp->w_flag |= flags;
@@ -640,12 +640,15 @@ showbuffer(struct buffer *bp, struct mgwin *wp, int flags)
  * include the number, if necessary.
  */
 int
-augbname(char *bn, char *fn, size_t bs)
+augbname(char *bn, const char *fn, size_t bs)
 {
 	int	 count;
 	size_t	 remain, len;
+	char    *fntmp;
 
-	len = strlcpy(bn, basename(fn), bs);
+	fntmp = strdup(fn);
+	len = strlcpy(bn, basename(fntmp), bs);
+	free(fntmp);
 	if (len >= bs)
 		return (FALSE);
 
@@ -804,4 +807,24 @@ getbufcwd(char *path, size_t plen)
 error:
 	path[0] = '\0';
 	return (FALSE);
+}
+
+/*
+ * Ensures a buffer has not been modified elsewhere.
+ * Returns TRUE if it has NOT. FALSE or ABORT otherwise
+ */
+int
+checkdirty(struct buffer *bp)
+{
+	int s;
+
+	if ((bp->b_flag & (BFDIRTY | BFIGNDIRTY)) == BFDIRTY) {
+		if ((s = eyorn("File changed on disk; really edit the buffer"))
+		    != TRUE)
+			return (s);
+		bp->b_flag &= ~BFDIRTY;
+		bp->b_flag |= BFIGNDIRTY;
+	}
+
+	return (TRUE);
 }

@@ -46,6 +46,23 @@ EOF
 
 exec 3> config.log
 
+# Checks to see if GCC defines a given macro and returns true if it does.
+gcc_defines()
+{
+    DEFSTR=$1
+
+    cat << EOF > testfile.c
+#include <stdio.h>
+int main(void)
+{
+#ifdef ${DEFSTR}
+garbage that will make gcc fail
+#endif
+return 0;}
+EOF
+    ! gcc -Wall testfile.c -o testfile 2>&3
+}
+
 note 'internal arc4random'
 cat << EOF > testfile.c
 #include <stdlib.h>
@@ -149,37 +166,36 @@ fi
 
 if [ ! -r /usr/include/term.h ]; then
     note 'term.h'
-    for i in pkg local; do
-	if [ -e /usr/$i/include/term.h ]; then
-	    echo "Found in /usr/$i/include"
-	    extralibs="$extralibs -L/usr/$i/lib"
-	    extraflags="$extraflags -I/usr/$i/include"
-	    break
-	fi
-	echo 'Not found!' >&2
-	echo 'Do you have the ncurses devel package installed?' >&2
-	echo 'If you know where term.h is, please email the author!' >&2
-	exit 1
-    done
+    if [ -r /usr/include/ncurses/term.h ]; then
+	echo "Found in /usr/include/ncurses"
+	extraflags="$extraflags -I/usr/include/ncurses"
+    else
+	for i in pkg local; do
+	    if [ -r /usr/$i/include/term.h ]; then
+		echo "Found in /usr/$i/include"
+		extralibs="$extralibs -L/usr/$i/lib"
+		extraflags="$extraflags -I/usr/$i/include"
+		break
+	    else
+		false
+	    fi
+	done ||
+	{
+	    echo 'Not found!' >&2
+	    echo 'Do you have the ncurses devel package installed?' >&2
+	    echo 'If you know where term.h is, please email the author!' >&2
+	    exit 1
+	}
+    fi
 fi
 
-note 'glibc'
-cat << EOF > testfile.c
-#include <stdio.h>
-int main(void)
-{
-#ifdef __GLIBC__
-garbage that will make gcc fail
-#endif
-return 0;}
-EOF
-if gcc -Wall testfile.c -o testfile 2>&3; then
-    echo 'Not on this system'
-else
-    echo 'found, adding base and dirname.'
+note 'base and dirname'
+if gcc_defines "__GLIBC__" || gcc_defines "__CYGWIN__" ; then
+    echo 'Not present, adding.'
     extraobjs="$extraobjs dirname.o basename.o"
+else
+    echo 'Present on this system.'
 fi
-
 
 note 'version'
 if ls --version > testfile.o 2>&3; then
@@ -189,12 +205,36 @@ else
     echo 'Other ls'
 fi
 
+note '.exe extension'
+cat << EOF > testfile.c
+int main(void)
+{return 0;}
+EOF
+if gcc -Wall testfile.c -o testfile 2>&3; then
+    if [ -x testfile.exe ]; then
+	echo 'Yes.'
+	exe_ext='.exe'
+    else
+	echo 'No.'
+	exe_ext=''
+    fi
+else
+    echo 'Could not test for .exe extension!' >&2
+    exit 1
+fi
+
+# Suppress DLL auto-import error when linking on Cygwin
+if uname -s | grep -q '^CYGWIN' ; then
+    extralibs="$extralibs -Wl,--enable-auto-import"
+fi
+
 
 rm testfile*
 
 sed -e "s|@extraflags@|$extraflags|" \
     -e "s|@extralibs@|$extralibs|" \
     -e "s|@extraobjs@|$extraobjs|" \
+    -e "s|@exe_ext@|$exe_ext|" \
     Makefile.in > Makefile
 
 echo "OK, now run \`make'."
