@@ -1,3 +1,12 @@
+mg (20090107-1) unstable; urgency=low
+
+  * New upstream release
+    * Obsoletes old patches.
+  * Replace CDBS with dh.
+  * The sample .mg is an example, not documentation.
+
+ -- Trent W. Buck <trentbuck@gmail.com>  Tue, 17 Feb 2009 18:51:46 +1100
+
 mg (20080610-1) unstable; urgency=low
 
   * New upstream release
