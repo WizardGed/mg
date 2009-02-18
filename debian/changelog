@@ -1,3 +1,12 @@
+mg (20090107-2) unstable; urgency=low
+
+  * The "binary" target was taught about the "make install" exception
+    directly, but sbuild was invoking the binary-arch target directly.
+    (Closes: #515790, #515807).
+  * Expand explanatory comments in debian/rules regarding ./configure.
+
+ -- Trent W. Buck <trentbuck@gmail.com>  Wed, 18 Feb 2009 11:46:45 +1100
+
 mg (20090107-1) unstable; urgency=low
 
   * New upstream release
