@@ -1,3 +1,9 @@
+mg (20090107-3) unstable; urgency=low
+
+  * control, watch: Upstream homepage moved (Closes: #517210).
+
+ -- Trent W. Buck <trentbuck@gmail.com>  Sat, 21 Mar 2009 13:32:09 +1100
+
 mg (20090107-2) unstable; urgency=low
 
   * The "binary" target was taught about the "make install" exception
@@ -5,7 +11,7 @@ mg (20090107-2) unstable; urgency=low
     (Closes: #515790, #515807).
   * Expand explanatory comments in debian/rules regarding ./configure.
 
- -- Trent W. Buck <trentbuck@gmail.com>  Wed, 18 Feb 2009 11:46:45 +1100
+ -- Trent W. Buck <trentbuck@gmail.com>  Sat, 21 Mar 2009 13:31:46 +1100
 
 mg (20090107-1) unstable; urgency=low
 

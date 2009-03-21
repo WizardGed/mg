@@ -5,7 +5,7 @@ Maintainer: Trent W. Buck <trentbuck@gmail.com>
 DM-Upload-Allowed: yes
 Build-Depends: debhelper (>= 7), libncurses-dev
 Standards-Version: 3.8.0
-Homepage: http://www.xs4all.nl/~hanb/software/mg/
+Homepage: http://www.han.dds.nl/software/mg/
 
 Package: mg
 Architecture: any
