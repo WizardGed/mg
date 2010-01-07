@@ -1,3 +1,9 @@
+mg (20090107-4) UNRELEASED; urgency=low
+
+  * Use overrides style rules.
+
+ -- Trent W. Buck <trentbuck@gmail.com>  Thu, 07 Jan 2010 16:30:47 +1100
+
 mg (20090107-3) unstable; urgency=low
 
   * control, watch: Upstream homepage moved (Closes: #517210).

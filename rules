@@ -5,14 +5,9 @@
 # accept arguments.  To make users realize this, ./configure exits if
 # it is passed arguments -- which dh_auto_configure does.  Therefore,
 # we need an exception to invoke it manually.
-build:
-	dh $@ --before configure
+override_dh_auto_configure:
 	./configure
-	dh $@ --after configure
 # Because --prefix=/usr and such are not set up by ./configure, we
 # need to invoke "make install" manually, too.
-binary: binary-arch binary-indep
-binary-arch:
-	dh $@ --before dh_auto_install
+override_dh_auto_install:
 	make install DESTDIR=debian/mg prefix=/usr mandir=/usr/share/man
-	dh $@ --after dh_auto_install
