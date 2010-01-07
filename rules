@@ -11,3 +11,8 @@ override_dh_auto_configure:
 # need to invoke "make install" manually, too.
 override_dh_auto_install:
 	$(MAKE) install DESTDIR=debian/mg prefix=/usr mandir=/usr/share/man
+
+# For use with a new clone of debian/ from darcs.debian.org.
+get-orig-source:
+	uscan --download-current-version
+	tar --transform 's|^[^/]\+||' -xf ../mg_`dpkg-parsechangelog | sed -rn 's/^Version: ((\d+):)?(.*)-.*/\3/p'`.orig.tar.gz
