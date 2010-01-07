@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 %:
-	dh $@
+	+dh $@
 # mg's ./configure script is not made by autoconf, and it does not
 # accept arguments.  To make users realize this, ./configure exits if
 # it is passed arguments -- which dh_auto_configure does.  Therefore,
@@ -10,4 +10,4 @@ override_dh_auto_configure:
 # Because --prefix=/usr and such are not set up by ./configure, we
 # need to invoke "make install" manually, too.
 override_dh_auto_install:
-	make install DESTDIR=debian/mg prefix=/usr mandir=/usr/share/man
+	$(MAKE) install DESTDIR=debian/mg prefix=/usr mandir=/usr/share/man

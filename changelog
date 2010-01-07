@@ -1,6 +1,7 @@
 mg (20090107-4) UNRELEASED; urgency=low
 
   * Use overrides style rules.
+  * Fix parallel compilation (debuild -j8).
 
  -- Trent W. Buck <trentbuck@gmail.com>  Thu, 07 Jan 2010 16:30:47 +1100
 
