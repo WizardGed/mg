@@ -1,4 +1,4 @@
-$OpenBSD: tutorial,v 1.5 2008/07/30 17:39:31 kjell Exp $
+$Id: tutorial,v 1.4 2011/01/20 04:35:22 han Exp $
 
 The mg Tutorial
 ---------------
@@ -366,3 +366,4 @@ Copyright
 ---------
 
 None. This document is in the public domain.
+

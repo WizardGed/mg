@@ -1,4 +1,4 @@
-/*	$OpenBSD: file.c,v 1.69 2008/09/15 16:13:35 kjell Exp $	*/
+/*	$OpenBSD: file.c,v 1.73 2011/01/18 16:29:37 kjell Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -155,7 +155,7 @@ poptofile(int f, int n)
 		return (FALSE);
 	if (bp == curbp)
 		return (splitwind(f, n));
-	if ((wp = popbuf(bp)) == NULL)
+	if ((wp = popbuf(bp, WNONE)) == NULL)
 		return (FALSE);
 	curbp = bp;
 	curwp = wp;
@@ -219,10 +219,12 @@ readin(char *fname)
 
 	for (wp = wheadp; wp != NULL; wp = wp->w_wndp) {
 		if (wp->w_bufp == curbp) {
-			wp->w_dotp = wp->w_linep = bfirstlp(curbp);
-			wp->w_doto = 0;
-			wp->w_markp = NULL;
-			wp->w_marko = 0;
+			if ((fisdir(fname)) != TRUE) {
+				wp->w_dotp = wp->w_linep = bfirstlp(curbp);
+				wp->w_doto = 0;
+				wp->w_markp = NULL;
+				wp->w_marko = 0;
+				}
 		}
 	}
 
@@ -463,7 +465,7 @@ out:		lp2 = NULL;
 	}
 	for (wp = wheadp; wp != NULL; wp = wp->w_wndp) {
 		if (wp->w_bufp == curbp) {
-			wp->w_flag |= WFMODE | WFEDIT;
+			wp->w_rflag |= WFMODE | WFEDIT;
 			if (wp != curwp && lp2 != NULL) {
 				if (wp->w_dotp == lp1)
 					wp->w_dotp = lp2;
@@ -513,7 +515,7 @@ filewrite(int f, int n)
 		(void)strlcpy(curbp->b_fname, adjfname, sizeof(curbp->b_fname));
 		if (getbufcwd(curbp->b_cwd, sizeof(curbp->b_cwd)) != TRUE)
 			(void)strlcpy(curbp->b_cwd, "/", sizeof(curbp->b_cwd));
-		if (augbname(bn, basename(curbp->b_fname), sizeof(bn))
+		if (augbname(bn, curbp->b_fname, sizeof(bn))
 		    == FALSE)
 			return (FALSE);
 		free(curbp->b_bname);
@@ -654,7 +656,7 @@ upmodes(struct buffer *bp)
 
 	for (wp = wheadp; wp != NULL; wp = wp->w_wndp)
 		if (bp == NULL || curwp->w_bufp == bp)
-			wp->w_flag |= WFMODE;
+			wp->w_rflag |= WFMODE;
 }
 
 /*
