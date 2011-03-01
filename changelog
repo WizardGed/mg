@@ -1,4 +1,4 @@
-mg (20110120-1) UNRELEASED; urgency=low
+mg (20110120-1) unstable; urgency=low
 
   * Use overrides style rules.
   * Fix parallel compilation (debuild -j8).
@@ -7,7 +7,7 @@ mg (20110120-1) UNRELEASED; urgency=low
   * New upstream release (Closes: #414846, #565036).
   * Apply Xavier's patch (Closes: #573447).
 
- -- Trent W. Buck <trentbuck@gmail.com>  Tue, 01 Mar 2011 14:40:53 +1100
+ -- Trent W. Buck <trentbuck@gmail.com>  Tue, 01 Mar 2011 15:53:46 +1100
 
 mg (20090107-3) unstable; urgency=low
 
