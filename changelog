@@ -4,7 +4,7 @@ mg (20110120-1) UNRELEASED; urgency=low
   * Fix parallel compilation (debuild -j8).
   * New upstream URL in watchfile.
   * Allow parallelism.
-  * New upstream release
+  * New upstream release (Closes: #414846, #565036).
   * Apply Xavier's patch (Closes: #573447).
 
  -- Trent W. Buck <trentbuck@gmail.com>  Tue, 01 Mar 2011 14:40:53 +1100
