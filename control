@@ -6,6 +6,8 @@ DM-Upload-Allowed: yes
 Build-Depends: debhelper (>= 7.0.50~), libncurses-dev
 Standards-Version: 3.8.0
 Homepage: http://www.han.dds.nl/software/mg/
+Vcs-Darcs:   https://darcs.debian.org/collab-maint/mg
+Vcs-Browser: https://darcs.debian.org/collab-maint/mg
 
 Package: mg
 Architecture: any
