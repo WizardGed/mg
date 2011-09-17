@@ -16,7 +16,7 @@ mandir=		$(prefix)/man
 
 CC=		gcc
 CFLAGS?=	-O2 -pipe
-CFLAGS+=	-g -Wall -Werror
+CFLAGS+=	-g -Wall -Werror -Wno-error=unused-but-set-variable
 LIBS= 		-lncurses
 
 INSTALL=	/usr/bin/install

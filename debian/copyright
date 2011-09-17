@@ -2,7 +2,7 @@ Format-Specification:
  http://wiki.debian.org/Proposals/CopyrightFormat?action=recall&rev=227
 Upstream-Name: mg
 Upstream-Maintainer: Han Boetes <han@mijncomputer.nl>
-Upstream-Source: http://www.xs4all.nl/~hanb/software/mg/
+Upstream-Source: http://homepage.boetes.org/software/mg/
 
 Files: *
 License: PD

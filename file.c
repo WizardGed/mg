@@ -1,4 +1,4 @@
-/*	$OpenBSD: file.c,v 1.73 2011/01/18 16:29:37 kjell Exp $	*/
+/*	$OpenBSD: file.c,v 1.76 2011/08/31 08:58:29 lum Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -6,10 +6,11 @@
  *	File commands.
  */
 
-#include "libgen.h"
 #include "def.h"
 
-static char *xdirname(const char *);
+#include <libgen.h>
+
+size_t xdirname(char *, const char *, size_t);
 
 /*
  * Insert a file into the current buffer.  Real easy - just call the
@@ -211,7 +212,7 @@ readin(char *fname)
 	if (bclear(curbp) != TRUE)
 		return (TRUE);
 	/* Clear readonly. May be set by autoexec path */
-	curbp->b_flag &=~ BFREADONLY;
+	curbp->b_flag &= ~BFREADONLY;
 	if ((status = insertfile(fname, fname, TRUE)) != TRUE) {
 		ewprintf("File is not readable: %s", fname);
 		return (FALSE);
@@ -291,7 +292,6 @@ insertfile(char *fname, char *newname, int replacebuf)
 	int	 nbytes, s, nline = 0, siz, x, x2;
 	int	 opos;			/* offset we started at */
 	int	 oline;			/* original line number */
-	char *dp;
 
 	if (replacebuf == TRUE)
 		x = undo_enable(FFRAND, 0);
@@ -310,10 +310,8 @@ insertfile(char *fname, char *newname, int replacebuf)
 	bp = curbp;
 	if (newname != NULL) {
 		(void)strlcpy(bp->b_fname, newname, sizeof(bp->b_fname));
-		dp = xdirname(newname);
-		(void)strlcpy(bp->b_cwd, dp, sizeof(bp->b_cwd));
+		(void)xdirname(bp->b_cwd, newname, sizeof(bp->b_cwd));
 		(void)strlcat(bp->b_cwd, "/", sizeof(bp->b_cwd));
-		free(dp);
 	}
 
 	/* hard file open */
@@ -334,16 +332,15 @@ insertfile(char *fname, char *newname, int replacebuf)
 			goto cleanup;
 		}
 		killbuffer(bp);
-		if ((bp = dired_(fname)) == NULL)
-			return (FALSE);
+		bp = dired_(fname);
 		undo_enable(FFRAND, x);
+		if (bp == NULL)
+			return (FALSE);
 		curbp = bp;
 		return (showbuffer(bp, curwp, WFFULL | WFMODE));
 	} else {
-		dp = xdirname(fname);
-		(void)strlcpy(bp->b_cwd, dp, sizeof(bp->b_cwd));
+		(void)xdirname(bp->b_cwd, fname, sizeof(bp->b_cwd));
 		(void)strlcat(bp->b_cwd, "/", sizeof(bp->b_cwd));
-		free(dp);
 	}
 	opos = curwp->w_doto;
 	oline = curwp->w_dotline;
@@ -417,7 +414,7 @@ retry:
 	}
 endoffile:
 	/* ignore errors */
-	ffclose(NULL);
+	(void)ffclose(NULL);
 	/* don't zap an error */
 	if (s == FIOEOF) {
 		if (nline == 1)
@@ -574,7 +571,7 @@ buffsave(struct buffer *bp)
 		    "Save anyway")) != TRUE)
 			return (s);
 	}
-
+	
 	if (makebackup && (bp->b_flag & BFBAK)) {
 		s = fbackupfile(bp->b_fname);
 		/* hard error */
@@ -638,9 +635,11 @@ writeout(struct buffer *bp, char *fn)
 		s = ffclose(bp);
 		if (s == FIOSUC)
 			ewprintf("Wrote %s", fn);
-	} else
-		/* ignore close error if it is a write error */
+	} else {
+		/* print a message indicating write error */
 		(void)ffclose(bp);
+		ewprintf("Unable to write %s", fn);
+	}
 	(void)fupdstat(bp);
 	return (s == FIOSUC);
 }
@@ -660,20 +659,38 @@ upmodes(struct buffer *bp)
 }
 
 /*
- * Same as dirname, except an empty string is returned in
+ * dirname using strlcpy semantic.
+ * Like dirname() except an empty string is returned in
  * place of "/". This means we can always add a trailing
  * slash and be correct.
- * Unlike dirname, we allocate. Caller must free.
+ * Address portability issues by copying argument
+ * before using. Some implementations modify the input string.
  */
-static char *
-xdirname(const char *path)
+size_t
+xdirname(char *dp, const char *path, size_t dplen)
 {
-	char *dp;
+	char ts[NFILEN];
+	size_t len;
 
-	dp = strdup(path);
-	dp = dirname(dp);
-	if (*dp && dp[0] == '/' && dp[1] == '\0')
-		return (strdup(""));
+	(void)strlcpy(ts, path, NFILEN);
+	len = strlcpy(dp, dirname(ts), dplen);
+	if (dplen > 0 && dp[0] == '/' && dp[1] == '\0') {
+		dp[0] = '\0';
+		len = 0;
+	}
+	return (len);
+}
 
-	return (strdup(dp));
+/*
+ * basename using strlcpy/strlcat semantic.
+ * Address portability issue by copying argument
+ * before using: some implementations modify the input string.
+ */
+size_t
+xbasename(char *bp, const char *path, size_t bplen)
+{
+	char ts[NFILEN];
+
+	(void)strlcpy(ts, path, NFILEN);
+	return (strlcpy(bp, basename(ts), bplen));
 }

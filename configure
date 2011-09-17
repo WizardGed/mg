@@ -60,7 +60,7 @@ garbage that will make gcc fail
 #endif
 return 0;}
 EOF
-    ! gcc -Wall testfile.c -o testfile 2>&3
+    ! ${CC:-gcc} -Wall testfile.c -o testfile 2>&3
 }
 
 note 'internal arc4random'
@@ -69,7 +69,7 @@ cat << EOF > testfile.c
 int main(void)
 {arc4random();return 0;}
 EOF
-if gcc testfile.c -o testfile 2>&3; then
+if ${CC:-gcc} testfile.c -o testfile 2>&3; then
     echo Found.
     add_inc HAVE_ARC4RANDOM
 else
@@ -81,7 +81,7 @@ else
 int main(void)
 {arc4random();return 0;}
 EOF
-    if gcc -larc4random testfile.c -o testfile 2>&3; then
+    if ${CC:-gcc} -larc4random testfile.c -o testfile 2>&3; then
 	echo Found.
 	add_inc HAVE_ARC4RANDOM_EXT
 	extralibs="$extralibs -larc4random"
@@ -97,7 +97,7 @@ cat << EOF > testfile.c
 int main(void)
 {strtonum(NULL, 1, 1, NULL);return 0;}
 EOF
-if gcc -Wall testfile.c -o testfile 2>&3; then
+if ${CC:-gcc} -Wall testfile.c -o testfile 2>&3; then
     echo 'Found.'
 else
     echo 'Not Found, adding.'
@@ -112,7 +112,7 @@ cat << EOF > testfile.c
 int main(void)
 {strlcpy(NULL, NULL, 1);return 0;}
 EOF
-if gcc -Wall testfile.c -o testfile 2>&3; then
+if ${CC:-gcc} -Wall testfile.c -o testfile 2>&3; then
     echo 'Found.'
 else
     echo 'Not Found, adding.'
@@ -126,7 +126,7 @@ cat << EOF > testfile.c
 int main(void)
 {strlcat(NULL, NULL, 1);return 0;}
 EOF
-if gcc -Wall testfile.c -o testfile 2>&3; then
+if ${CC:-gcc} -Wall testfile.c -o testfile 2>&3; then
     echo 'Found.'
 else
     echo 'Not Found, adding.'
@@ -140,7 +140,7 @@ cat << EOF > testfile.c
 int main(void)
 {fgetln(NULL, NULL);return 0;}
 EOF
-if gcc -Wall testfile.c -o testfile 2>&3; then
+if ${CC:-gcc} -Wall testfile.c -o testfile 2>&3; then
     echo 'Found.'
 else
     echo 'Not Found, adding.'
@@ -156,7 +156,7 @@ cat << EOF > testfile.c
 int main(void)
 {return 0;}
 EOF
-if gcc -Wno-strict-aliasing testfile.c -o testfile 2>&3; then
+if ${CC:-gcc} -Wno-strict-aliasing testfile.c -o testfile 2>&3; then
     echo 'Works OK.'
     extraflags="$extraflags -Wno-strict-aliasing"
 else
@@ -210,7 +210,7 @@ cat << EOF > testfile.c
 int main(void)
 {return 0;}
 EOF
-if gcc -Wall testfile.c -o testfile 2>&3; then
+if ${CC:-gcc} -Wall testfile.c -o testfile 2>&3; then
     if [ -x testfile.exe ]; then
 	echo 'Yes.'
 	exe_ext='.exe'
@@ -225,7 +225,7 @@ fi
 
 # Suppress DLL auto-import error when linking on Cygwin
 if uname -s | grep -q '^CYGWIN' ; then
-    extralibs="$extralibs -Wl,--enable-auto-import"
+    extralibs="$extralibs -Wl,--enable-auto-import -Wno-char-subscripts"
 fi
 
 
