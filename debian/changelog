@@ -1,3 +1,12 @@
+mg (20110905-1.1) unstable; urgency=low
+
+  * Non-maintainer upload with maintainer approval.
+  * prerm: Preserve the /usr/bin/editor alternative during upgrades and
+    unregister it on package removal.
+    (Closes: #668439)
+
+ -- Andreas Beckmann <anbe@debian.org>  Sun, 27 Jan 2013 11:48:28 +0100
+
 mg (20110905-1) unstable; urgency=low
 
   * New upstream release (Closes: #625385).
