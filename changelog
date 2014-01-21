@@ -1,3 +1,9 @@
+mg (20131118-1) UNRELEASED; urgency=medium
+
+  * New upstream release (Closes: #658539, #661732).
+
+ -- Peter De Wachter <pdewacht@gmail.com>  Tue, 21 Jan 2014 23:04:09 +0100
+
 mg (20110905-1.1) unstable; urgency=low
 
   * Non-maintainer upload with maintainer approval.

@@ -1,0 +1,47 @@
+Description: build with libbsd instead of clens
+ Upstream uses clens to provide BSDish functions, but that library isn't
+ packaged in Debian. Instead use libbsd, which provides the same
+ functionality.
+Author: Peter De Wachter <pdewacht@gmail.com>
+Forwarded: yes
+
+--- a/GNUmakefile
++++ b/GNUmakefile
+@@ -13,13 +13,15 @@
+ includedir=	$(prefix)/include
+ mandir=		$(prefix)/man
+ 
++BSD_CFLAGS:=	$(shell pkg-config --cflags libbsd-overlay)
++BSD_LIBS:=	$(shell pkg-config --libs libbsd-overlay)
+ 
+ CC=		gcc
+ CFLAGS?=	-O2 -pipe
+ CFLAGS+=	-g -Wall -Werror -Wno-error=unused-but-set-variable -Wno-error=maybe-uninitialized
+ CFLAGS+= 	-DFKEYS -DREGEX -DXKEYS
+-CFLAGS+= 	-I$(includedir)/clens
+-LIBS=		-lcurses -lclens
++CFLAGS+= 	$(BSD_CFLAGS) -D__dead=__dead2
++LIBS=		-lcurses $(BSD_LIBS)
+ 
+ INSTALL=	/usr/bin/install
+ STRIP=		/usr/bin/strip
+--- a/def.h
++++ b/def.h
+@@ -13,7 +13,6 @@
+ #include	"sysdef.h"	/* Order is critical.		 */
+ #include	"ttydef.h"
+ #include	"chrdef.h"
+-#include        <clens.h>
+ 
+ typedef int	(*PF)(int, int);	/* generally useful type */
+ 
+--- a/theo.c
++++ b/theo.c
+@@ -24,6 +24,7 @@
+  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ 
++#include <sys/time.h>
+ #include "def.h"
+ #include "kbd.h"
+ #include "funmap.h"

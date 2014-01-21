@@ -1,16 +1,11 @@
 #!/usr/bin/make -f
+
 %:
-	+dh $@ --parallel
-# mg's ./configure script is not made by autoconf, and it does not
-# accept arguments.  To make users realize this, ./configure exits if
-# it is passed arguments -- which dh_auto_configure does.  Therefore,
-# we need an exception to invoke it manually.
-override_dh_auto_configure:
-	./configure
-# Because --prefix=/usr and such are not set up by ./configure, we
-# need to invoke "make install" manually, too.
+	dh $@ --parallel
+
+# We need to invoke "make install" manually to set up prefix=/usr and such.
 override_dh_auto_install:
-	+$(MAKE) install DESTDIR=debian/mg prefix=/usr mandir=/usr/share/man
+	$(MAKE) install DESTDIR=debian/mg prefix=/usr mandir=/usr/share/man
 
 # For use with a new clone of debian/ from darcs.debian.org.
 get-orig-source:
