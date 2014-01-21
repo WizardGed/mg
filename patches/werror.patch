@@ -1,0 +1,21 @@
+Description: Don't compile with -Werror
+ The standard dpkg-buildflags create some new (unimportant) warnings.
+ In combination with -Werror this causes the build to fail. Solution:
+ get rid of -Werror.
+ .
+ This can probably also be achieved using some make trickery, but this
+ seems simpler.
+Author: Peter De Wachter <pdewacht@gmail.com>
+Forwarded: yes
+
+--- a/GNUmakefile
++++ b/GNUmakefile
+@@ -18,7 +18,7 @@
+ 
+ CC=		gcc
+ CFLAGS?=	-O2 -pipe
+-CFLAGS+=	-g -Wall -Werror -Wno-error=unused-but-set-variable -Wno-error=maybe-uninitialized
++CFLAGS+=	-g -Wall
+ CFLAGS+= 	-DFKEYS -DREGEX -DXKEYS
+ CFLAGS+= 	$(BSD_CFLAGS) -D__dead=__dead2
+ LIBS=		-lcurses $(BSD_LIBS)
