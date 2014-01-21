@@ -8,6 +8,7 @@ mg (20110905-2) UNRELEASED; urgency=medium
 
   [ Peter De Wachter ]
   * Bump to debhelper 9.
+  * Don't need to link to libncurses, only to libtinfo.
 
  -- Andreas Beckmann <anbe@debian.org>  Sat, 18 Oct 2014 02:09:51 +0200
 
