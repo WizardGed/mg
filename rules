@@ -3,9 +3,12 @@
 %:
 	dh $@ --parallel
 
-# We need to invoke "make install" manually to set up prefix=/usr and such.
 override_dh_auto_install:
+# We need to invoke "make install" manually to set up prefix=/usr and such.
 	$(MAKE) install DESTDIR=debian/mg prefix=/usr mandir=/usr/share/man
+# Install the ".mg" example config manually, as debhelper can't rename
+	install -D -m444 .mg debian/mg/usr/share/doc/mg/examples/dot_mg
+
 
 # For use with a new clone of debian/ from darcs.debian.org.
 get-orig-source:
