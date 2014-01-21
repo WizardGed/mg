@@ -1,0 +1,16 @@
+Description: Link with -ltinfo instead of -lcurses
+ mg doesn't use any of libcurses' symbols. This gives slightly tighter
+ dependencies.
+Author: Peter De Wachter <pdewacht@gmail.com>
+
+--- a/GNUmakefile
++++ b/GNUmakefile
+@@ -21,7 +21,7 @@
+ CFLAGS+=	-g -Wall
+ CFLAGS+= 	-DFKEYS -DREGEX -DXKEYS
+ CFLAGS+= 	$(BSD_CFLAGS) -D__dead=__dead2
+-LIBS=		-lcurses $(BSD_LIBS)
++LIBS=		-ltinfo $(BSD_LIBS)
+ 
+ INSTALL=	/usr/bin/install
+ STRIP=		/usr/bin/strip
