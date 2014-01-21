@@ -7,10 +7,12 @@
 # we need an exception to invoke it manually.
 override_dh_auto_configure:
 	./configure
-# Because --prefix=/usr and such are not set up by ./configure, we
-# need to invoke "make install" manually, too.
+
 override_dh_auto_install:
-	+$(MAKE) install DESTDIR=debian/mg prefix=/usr mandir=/usr/share/man
+# We need to invoke "make install" manually to set up prefix=/usr and such.
+	$(MAKE) install DESTDIR=debian/mg prefix=/usr mandir=/usr/share/man
+# Install the ".mg" example config manually, as debhelper can't rename
+	install -D -m444 .mg debian/mg/usr/share/doc/mg/examples/dot_mg
 
 # For use with a new clone of debian/ from darcs.debian.org.
 get-orig-source:
