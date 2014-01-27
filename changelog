@@ -1,6 +1,11 @@
 mg (20131118-1) UNRELEASED; urgency=medium
 
-  * New upstream release (Closes: #658539, #661732).
+  * New upstream version (Closes: #658539, #661732).
+  * Merge diff for NMU version 20110905-1.1.
+  * Updated copyright file.
+  * Don't need to link to libncurses, only to libtinfo.
+  * Bump to debhelper 9.
+  * Bump to Standards-Version 3.9.5.
 
  -- Peter De Wachter <pdewacht@gmail.com>  Tue, 21 Jan 2014 23:04:09 +0100
 
