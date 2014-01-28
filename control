@@ -3,7 +3,7 @@ Section: editors
 Priority: optional
 Maintainer: Trent W. Buck <trentbuck@gmail.com>
 Uploaders: Peter De Wachter <pdewacht@gmail.com>
-Build-Depends: debhelper (>= 9), libncurses-dev
+Build-Depends: debhelper (>= 9), libncurses-dev, libbsd-dev, pkg-config
 Standards-Version: 3.9.5
 Homepage: http://homepage.boetes.org/software/mg/
 Vcs-Git: https://alioth.debian.org/anonscm/git/collab-maint/mg.git
