@@ -1,0 +1,7 @@
+global-set-key } blink-matching-paren-hack
+blink-matching-paren
+set-default-mode blink
+auto-indent-mode
+dired-backup-unflag
+make-backup-files 
+set-fill-column 72
