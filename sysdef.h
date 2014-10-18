@@ -20,9 +20,10 @@
 
 /* necesarry to get asprintf & friends with glibc XXX doesn't work for some
  * mysterious reason! */
-/* #ifdef __GLIBC__ */
-/* #  define _GNU_SOURCE */
-/* #endif */
+#ifdef __GLIBC__
+#  define _GNU_SOURCE
+#  define __USE_GNU
+#endif
 #include <stdio.h>
 
 #include <unistd.h>
@@ -55,13 +56,6 @@ extern size_t strlcpy(char *, const char *, size_t);
 #ifdef HAVE_NOSTRLCAT
 extern size_t strlcat(char *, const char *, size_t);
 #endif
-
-/* Manpage says: #define _GNU_SOURCE, does that work? No! */
-#ifdef __GLIBC__
-extern int asprintf (char **, const char *, ...);
-extern int vasprintf (char **, const char *, _G_va_list);
-#endif
-
 
 /* not provided by glibc stdio.h */
 #ifdef HAVE_NOFGETLN
