@@ -8,14 +8,16 @@ Description: Don't compile with -Werror
 Author: Peter De Wachter <pdewacht@gmail.com>
 Forwarded: yes
 
---- a/GNUmakefile
-+++ b/GNUmakefile
-@@ -18,7 +18,7 @@
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -16,8 +16,8 @@ mandir=		$(prefix)/man
  
  CC=		gcc
  CFLAGS?=	-O2 -pipe
--CFLAGS+=	-g -Wall -Werror -Wno-error=unused-but-set-variable -Wno-error=maybe-uninitialized
+-CFLAGS+=	-g -Wall -Werror -Wno-error=unused-but-set-variable
+-LIBS= 		-lncurses
 +CFLAGS+=	-g -Wall
- CFLAGS+= 	-DFKEYS -DREGEX -DXKEYS
- CFLAGS+= 	$(BSD_CFLAGS) -D__dead=__dead2
- LIBS=		-lcurses $(BSD_LIBS)
++LIBS= 		-lcurses
+ 
+ INSTALL=	/usr/bin/install
+ STRIP=		/usr/bin/strip

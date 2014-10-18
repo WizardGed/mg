@@ -3,14 +3,14 @@ Description: Link with -ltinfo instead of -lcurses
  dependencies.
 Author: Peter De Wachter <pdewacht@gmail.com>
 
---- a/GNUmakefile
-+++ b/GNUmakefile
-@@ -21,7 +21,7 @@
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -17,7 +17,7 @@ mandir=		$(prefix)/man
+ CC=		gcc
+ CFLAGS?=	-O2 -pipe
  CFLAGS+=	-g -Wall
- CFLAGS+= 	-DFKEYS -DREGEX -DXKEYS
- CFLAGS+= 	$(BSD_CFLAGS) -D__dead=__dead2
--LIBS=		-lcurses $(BSD_LIBS)
-+LIBS=		-ltinfo $(BSD_LIBS)
+-LIBS= 		-lcurses
++LIBS= 		-ltinfo
  
  INSTALL=	/usr/bin/install
  STRIP=		/usr/bin/strip
