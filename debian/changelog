@@ -5,6 +5,7 @@ mg (20110905-2) UNRELEASED; urgency=medium
   * Set Maintainer to Debian QA Group.  (See #734331, #759306)
   * Drop DMUA.
   * Update Homepage.  (Closes: #739170)
+  * Bump Standards-Version to 3.9.6, no changes needed.
 
   [ Peter De Wachter ]
   * Bump to debhelper 9.

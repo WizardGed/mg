@@ -3,7 +3,7 @@ Section: editors
 Priority: optional
 Maintainer: Debian QA Group <packages@qa.debian.org>
 Build-Depends: debhelper (>= 9), libncurses-dev
-Standards-Version: 3.8.0
+Standards-Version: 3.9.6
 Homepage: http://homepage.boetes.org/software/mg/
 Vcs-Darcs:   https://darcs.debian.org/collab-maint/mg
 Vcs-Browser: https://darcs.debian.org/collab-maint/mg
