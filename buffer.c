@@ -1,4 +1,4 @@
-/*	$OpenBSD: buffer.c,v 1.65 2006/11/18 23:05:24 kjell Exp $	*/
+/*	$OpenBSD: buffer.c,v 1.66 2006/11/19 16:51:19 deraadt Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -497,7 +497,7 @@ bfind(const char *bname, int cflag)
 static struct buffer *
 bnew(const char *bname)
 {
-	struct buffer 	*bp;
+	struct buffer	*bp;
 	struct line	*lp;
 	int		 i;
 
@@ -639,7 +639,7 @@ showbuffer(struct buffer *bp, struct mgwin *wp, int flags)
 int
 augbname(char *bn, char *fn, size_t bs)
 {
-	int 	 count;
+	int	 count;
 	size_t	 remain, len;
 
 	len = strlcpy(bn, basename(fn), bs);

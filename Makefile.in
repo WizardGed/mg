@@ -15,7 +15,7 @@ mandir=		$(prefix)/man
 
 
 CC=		gcc
-CFLAGS=		-O2 -pipe
+CFLAGS?=	-O2 -pipe
 CFLAGS+=	-g -Wall -Werror
 LDFLAGS= 	-lncurses
 
