@@ -1,0 +1,13 @@
+Author: Andreas Beckmann <anbe@debian.org>
+Description: use hardening CPPFLAGS
+
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -66,6 +66,7 @@ CFLAGS+= 	@extraflags@
+ OBJS+=		@extraobjs@
+ LIBS+= 		@extralibs@
+ EXE_EXT=	@exe_ext@
++CFLAGS	+= $(CPPFLAGS)
+ 
+ .c.o:
+ 	$(CC) $(CFLAGS) -c $<

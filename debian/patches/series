@@ -1,3 +1,4 @@
 573447-huge-terminal-support
 werror.patch
 curses.patch
+hardening.patch
