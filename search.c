@@ -1,4 +1,4 @@
-/*	$OpenBSD: search.c,v 1.32 2006/07/25 08:27:09 kjell Exp $	*/
+/*	$OpenBSD: search.c,v 1.34 2006/11/18 22:46:16 kjell Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -26,9 +26,10 @@
 #define SRCH_MARK	(-5)
 
 struct srchcom {
-	int	 s_code;
+	int		 s_code;
 	struct line	*s_dotp;
-	int	 s_doto;
+	int		 s_doto;
+	int		 s_dotline;
 };
 
 static int	isearch(int);
@@ -202,6 +203,7 @@ isearch(int dir)
 			srch_lastdir = dir;
 			curwp->w_markp = clp;
 			curwp->w_marko = cbo;
+			curwp->w_markline = cdotline;
 			ewprintf("Mark set");
 			return (TRUE);
 		case CCHR('G'):
@@ -305,9 +307,13 @@ isearch(int dir)
 
 			while (cbo < llength(clp)) {
 				c = lgetc(clp, cbo++);
-				if ((!firstc && !isalnum(c)) || pptr == NPAT)
+				if ((!firstc && !isalnum(c)))
 					break;
 
+				if (pptr == NPAT - 1) {
+					ttbeep();
+					break;
+				}
 				firstc = 0;
 				if (!xcase && ISUPPER(c))
 					c = TOLOWER(c);
@@ -342,6 +348,7 @@ isearch(int dir)
 				ungetkey(c);
 				curwp->w_markp = clp;
 				curwp->w_marko = cbo;
+				curwp->w_markline = cdotline;
 				ewprintf("Mark set");
 				curwp->w_flag |= WFMOVE;
 				return (TRUE);
@@ -354,12 +361,12 @@ isearch(int dir)
 				pptr = 0;
 			if (pptr == 0)
 				success = TRUE;
-			pat[pptr++] = c;
-			if (pptr == NPAT) {
-				ewprintf("Pattern too long");
-				return (FALSE);
+			if (pptr == NPAT - 1)
+				ttbeep();
+			else {
+				pat[pptr++] = c;
+				pat[pptr] = '\0';
 			}
-			pat[pptr] = '\0';
 			is_lpush();
 			if (success != FALSE) {
 				if (is_find(dir) != FALSE)
@@ -396,6 +403,7 @@ is_lpush(void)
 	cmds[ctp].s_code = SRCH_NOPR;
 	cmds[ctp].s_doto = curwp->w_doto;
 	cmds[ctp].s_dotp = curwp->w_dotp;
+	cmds[ctp].s_dotline = curwp->w_dotline;
 }
 
 static void
@@ -404,6 +412,7 @@ is_pop(void)
 	if (cmds[cip].s_code != SRCH_NOPR) {
 		curwp->w_doto = cmds[cip].s_doto;
 		curwp->w_dotp = cmds[cip].s_dotp;
+		curwp->w_dotline = cmds[cip].s_dotline;
 		curwp->w_flag |= WFMOVE;
 		cmds[cip].s_code = SRCH_NOPR;
 	}
@@ -454,11 +463,12 @@ is_undo(int *pptr, int *dir)
 static int
 is_find(int dir)
 {
-	int	 plen, odoto;
+	int	 plen, odoto, odotline;
 	struct line	*odotp;
 
 	odoto = curwp->w_doto;
 	odotp = curwp->w_dotp;
+	odotline = curwp->w_dotline;
 	plen = strlen(pat);
 	if (plen != 0) {
 		if (dir == SRCH_FORW) {
@@ -466,6 +476,7 @@ is_find(int dir)
 			if (forwsrch() == FALSE) {
 				curwp->w_doto = odoto;
 				curwp->w_dotp = odotp;
+				curwp->w_dotline = odotline;
 				return (FALSE);
 			}
 			return (TRUE);
@@ -475,6 +486,7 @@ is_find(int dir)
 			if (backsrch() == FALSE) {
 				curwp->w_doto = odoto;
 				curwp->w_dotp = odotp;
+				curwp->w_dotline = odotline;
 				return (FALSE);
 			}
 			return (TRUE);
