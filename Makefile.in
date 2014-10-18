@@ -17,7 +17,7 @@ mandir=		$(prefix)/man
 CC=		gcc
 CFLAGS?=	-O2 -pipe
 CFLAGS+=	-g -Wall -Werror
-LDFLAGS= 	-lncurses
+LIBS= 		-lncurses
 
 INSTALL=	/usr/bin/install
 STRIP=		/usr/bin/strip
@@ -64,7 +64,7 @@ OBJS+=	grep.o theo.o
 # # Portability stuff.
 CFLAGS+= 	@extraflags@
 OBJS+=		@extraobjs@
-LDFLAGS+= 	@extralibs@
+LIBS+= 		@extralibs@
 EXE_EXT=	@exe_ext@
 
 .c.o:
@@ -74,7 +74,7 @@ all: $(name)
 
 
 $(name): $(OBJS)
-	$(CC) $(OBJS) -o $(name) $(LDFLAGS)
+	$(CC) $(LDFLAGS) $(OBJS) -o $(name) $(LIBS)
 
 distclean: clean
 	-rm -f Makefile config.log config.h *~ *.core core.*

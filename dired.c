@@ -1,4 +1,4 @@
-/*	$OpenBSD: dired.c,v 1.43 2007/09/11 15:47:17 gilles Exp $	*/
+/*	$OpenBSD: dired.c,v 1.47 2011/01/18 17:35:42 lum Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -37,6 +37,7 @@ static int	 d_rename(int, int);
 static int	 d_shell_command(int, int);
 static int	 d_create_directory(int, int);
 static int	 d_makename(struct line *, char *, size_t);
+static void	 reaper(int);
 
 extern struct keymap_s helpmap, cXmap, metamap;
 
@@ -226,7 +227,7 @@ d_otherwindow(int f, int n)
 		return (FALSE);
 	if ((bp = dired_(bufp)) == NULL)
 		return (FALSE);
-	if ((wp = popbuf(bp)) == NULL)
+	if ((wp = popbuf(bp, WNONE)) == NULL)
 		return (FALSE);
 	curbp = bp;
 	curwp = wp;
@@ -245,7 +246,7 @@ d_del(int f, int n)
 		if (lforw(curwp->w_dotp) != curbp->b_headp)
 			curwp->w_dotp = lforw(curwp->w_dotp);
 	}
-	curwp->w_flag |= WFEDIT | WFMOVE;
+	curwp->w_rflag |= WFEDIT | WFMOVE;
 	curwp->w_doto = 0;
 	return (TRUE);
 }
@@ -262,7 +263,7 @@ d_undel(int f, int n)
 		if (lforw(curwp->w_dotp) != curbp->b_headp)
 			curwp->w_dotp = lforw(curwp->w_dotp);
 	}
-	curwp->w_flag |= WFEDIT | WFMOVE;
+	curwp->w_rflag |= WFEDIT | WFMOVE;
 	curwp->w_doto = 0;
 	return (TRUE);
 }
@@ -280,7 +281,7 @@ d_undelbak(int f, int n)
 			curwp->w_dotp = lback(curwp->w_dotp);
 	}
 	curwp->w_doto = 0;
-	curwp->w_flag |= WFEDIT | WFMOVE;
+	curwp->w_rflag |= WFEDIT | WFMOVE;
 	return (TRUE);
 }
 
@@ -321,7 +322,7 @@ d_ffotherwindow(int f, int n)
 		return (FALSE);
 	if ((bp = (s ? dired_(fname) : findbuffer(fname))) == NULL)
 		return (FALSE);
-	if ((wp = popbuf(bp)) == NULL)
+	if ((wp = popbuf(bp, WNONE)) == NULL)
 		return (FALSE);
 	curbp = bp;
 	curwp = wp;
@@ -361,7 +362,7 @@ d_expunge(int f, int n)
 			}
 			lfree(lp);
 			curwp->w_bufp->b_lines--;
-			curwp->w_flag |= WFFULL;
+			curwp->w_rflag |= WFFULL;
 		}
 	}
 	return (TRUE);
@@ -520,7 +521,7 @@ d_shell_command(int f, int n)
 		close(fds[0]);
 		break;
 	}
-	wp = popbuf(bp);
+	wp = popbuf(bp, WNONE);
 	if (wp == NULL)
 		return (ABORT);	/* XXX - free the buffer?? */
 	curwp = wp;
@@ -593,8 +594,15 @@ dired_(char *dname)
 	struct buffer	*bp;
 	FILE	*dirpipe;
 	char	 line[256];
-	int	 len, ret;
+	int	 len, ret, counter, warp;
+	counter = 0;
+	warp = 0;
 
+	if ((fopen(dname,"r")) == NULL) {
+		if (errno == EACCES)
+			ewprintf("Permission denied");
+		return (NULL);
+	}
 	if ((dname = adjustname(dname, FALSE)) == NULL) {
 		ewprintf("Bad directory name");
 		return (NULL);
@@ -642,13 +650,26 @@ dired_(char *dname)
 	while (fgets(&line[2], sizeof(line) - 2, dirpipe) != NULL) {
 		line[strcspn(line, "\n")] = '\0'; /* remove ^J	 */
 		(void) addline(bp, line);
+		if ((strrchr(line,' ')) != NULL) {
+			counter++;
+			if ((strcmp((strrchr(line,' '))," ..")) == 0)  
+				warp = counter;
+		}
 	}
+	if ((strrchr(line,' ')) != NULL) {
+		if (strcmp((strrchr(line,' '))," ..") == 0) 
+			warp = counter - 1;
+	}		
+	if ((strrchr(line,' ')) != NULL)
+		bp->b_doto = strrchr(line,' ') - line + 1;
 	if (pclose(dirpipe) == -1) {
 		ewprintf("Problem closing pipe to ls : %s",
 		    strerror(errno));
 		return (NULL);
 	}
 	bp->b_dotp = bfirstlp(bp);
+	while (warp--)
+		bp->b_dotp  = lforw(bp->b_dotp);
 	(void)strlcpy(bp->b_fname, dname, sizeof(bp->b_fname));
 	(void)strlcpy(bp->b_cwd, dname, sizeof(bp->b_cwd));
 	if ((bp->b_modes[1] = name_mode("dired")) == NULL) {

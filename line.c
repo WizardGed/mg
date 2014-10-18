@@ -1,4 +1,4 @@
-/*	$OpenBSD: line.c,v 1.46 2008/09/15 16:13:35 kjell Exp $	*/
+/*	$OpenBSD: line.c,v 1.50 2011/01/18 16:28:00 kjell Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -120,9 +120,9 @@ lchange(int flag)
 	}
 	for (wp = wheadp; wp != NULL; wp = wp->w_wndp) {
 		if (wp->w_bufp == curbp) {
-			wp->w_flag |= flag;
+			wp->w_rflag |= flag;
 			if (wp != curwp)
-				wp->w_flag |= WFFULL;
+				wp->w_rflag |= WFFULL;
 		}
 	}
 }
@@ -423,29 +423,30 @@ ldelete(RSIZE n, int kflag)
 	int		 doto;
 	char		*cp1, *cp2;
 	size_t		 len;
-	char		*sv;
+	char		*sv = NULL;
 	int		 end;
 	int		 s;
+	int		 rval = FALSE;
 
 	if ((s = checkdirty(curbp)) != TRUE)
 		return (s);
 	if (curbp->b_flag & BFREADONLY) {
 		ewprintf("Buffer is read only");
-		return (FALSE);
+		goto out;
 	}
 	len = n;
 	if ((sv = calloc(1, len + 1)) == NULL)
-		return (FALSE);
+		goto out;
 	end = 0;
 
-	undo_add_delete(curwp->w_dotp, curwp->w_doto, n);
+	undo_add_delete(curwp->w_dotp, curwp->w_doto, n, (kflag & KREG));
 
 	while (n != 0) {
 		dotp = curwp->w_dotp;
 		doto = curwp->w_doto;
 		/* Hit the end of the buffer */
 		if (dotp == curbp->b_headp)
-			return (FALSE);
+			goto out;
 		/* Size of the chunk */
 		chunk = dotp->l_used - doto;
 
@@ -454,10 +455,10 @@ ldelete(RSIZE n, int kflag)
 		/* End of line, merge */
 		if (chunk == 0) {
 			if (dotp == blastlp(curbp))
-				return (FALSE);
+				goto out;
 			lchange(WFFULL);
 			if (ldelnewline() == FALSE)
-				return (FALSE);
+				goto out;
 			end = strlcat(sv, "\n", len + 1);
 			--n;
 			continue;
@@ -489,9 +490,11 @@ ldelete(RSIZE n, int kflag)
 		n -= chunk;
 	}
 	if (kchunk(sv, (RSIZE)len, kflag) != TRUE)
-		return (FALSE);
+		goto out;
+	rval = TRUE;
+out:
 	free(sv);
-	return (TRUE);
+	return (rval);
 }
 
 /*
@@ -615,11 +618,11 @@ lreplace(RSIZE plen, char *st)
 char *
 linetostr(const struct line *ln)
 {
-	size_t	 len;
+	int	 len;
 	char	*line;
 
 	len = llength(ln);
-	if (len == SIZE_MAX)  /* (len + 1) overflow */
+	if (len == INT_MAX)  /* (len + 1) overflow */
 		return (NULL);
 
 	if ((line = malloc(len + 1)) == NULL)

@@ -1,4 +1,4 @@
-/* $OpenBSD: cmode.c,v 1.5 2008/09/15 16:13:35 kjell Exp $ */
+/* $OpenBSD: cmode.c,v 1.7 2011/01/18 17:35:42 lum Exp $ */
 /*
  * This file is in the public domain.
  *
@@ -30,6 +30,7 @@ static int findcolpos(const struct buffer *, const struct line *, int);
 static struct line *findnonblank(struct line *);
 static int isnonblank(const struct line *, int);
 
+void cmode_init(void);
 int cc_comment(int, int);
 
 /* Keymaps */
@@ -92,7 +93,7 @@ cmode_init(void)
 	funmap_add(cc_tab, "c-tab-or-indent");
 	funmap_add(cc_indent, "c-indent");
 	funmap_add(cc_lfindent, "c-indent-and-newline");
-	maps_add((KEYMAP *)&cmodemap, "c-mode");
+	maps_add((KEYMAP *)&cmodemap, "c");
 }
 
 /*
@@ -101,7 +102,7 @@ cmode_init(void)
 int
 cmode(int f, int n)
 {
-	return(changemode(f, n, "c-mode"));
+	return(changemode(f, n, "c"));
 }
 
 /*

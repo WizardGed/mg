@@ -1,4 +1,4 @@
-/*	$OpenBSD: buffer.c,v 1.68 2008/09/15 16:11:35 kjell Exp $	*/
+/*	$OpenBSD: buffer.c,v 1.75 2011/01/18 17:35:42 lum Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -14,6 +14,8 @@
 
 static struct buffer *makelist(void);
 static struct buffer *bnew(const char *);
+
+static int usebufname(const char *);
 
 /* Flag for global working dir */
 extern int globalwd;
@@ -33,9 +35,29 @@ togglereadonly(int f, int n)
 		if (curbp->b_flag & BFCHG)
 			ewprintf("Warning: Buffer was modified");
 	}
-	curwp->w_flag |= WFMODE;
+	curwp->w_rflag |= WFMODE;
 
 	return (TRUE);
+}
+
+/* Switch to the named buffer.
+ * If no name supplied, switch to the default (alternate) buffer.
+ */
+int
+usebufname(const char *bufp)
+{
+	struct buffer *bp;
+
+	if (bufp == NULL)
+		return (ABORT);
+	if (bufp[0] == '\0' && curbp->b_altb != NULL)
+		bp = curbp->b_altb;
+	else if ((bp = bfind(bufp, TRUE)) == NULL)
+		return (FALSE);
+
+	/* and put it in current window */
+	curbp = bp;
+	return (showbuffer(bp, curwp, WFFRAME | WFFULL));
 }
 
 /*
@@ -48,7 +70,6 @@ togglereadonly(int f, int n)
 int
 usebuffer(int f, int n)
 {
-	struct buffer *bp;
 	char    bufn[NBUFN], *bufp;
 
 	/* Get buffer to use from user */
@@ -59,16 +80,7 @@ usebuffer(int f, int n)
 		bufp = eread("Switch to buffer: (default %s) ", bufn, NBUFN,
 		    EFNUL | EFNEW | EFBUF, curbp->b_altb->b_bname);
 
-	if (bufp == NULL)
-		return (ABORT);
-	if (bufp[0] == '\0' && curbp->b_altb != NULL)
-		bp = curbp->b_altb;
-	else if ((bp = bfind(bufn, TRUE)) == NULL)
-		return (FALSE);
-
-	/* and put it in current window */
-	curbp = bp;
-	return (showbuffer(bp, curwp, WFFRAME | WFFULL));
+	return (usebufname(bufp));
 }
 
 /*
@@ -98,8 +110,8 @@ poptobuffer(int f, int n)
 		return (FALSE);
 	if (bp == curbp)
 		return (splitwind(f, n));
-	/* and put it in a new window */
-	if ((wp = popbuf(bp)) == NULL)
+	/* and put it in a new, non-ephemeral window */
+	if ((wp = popbuf(bp, WNONE)) == NULL)
 		return (FALSE);
 	curbp = bp;
 	curwp = wp;
@@ -111,7 +123,7 @@ poptobuffer(int f, int n)
  * Ask for the name. Look it up (don't get too
  * upset if it isn't there at all!). Clear the buffer (ask
  * if the buffer has been changed). Then free the header
- * line and the buffer header. Bound to "C-X K".
+ * line and the buffer header. Bound to "C-X k".
  */
 /* ARGSUSED */
 int
@@ -188,9 +200,10 @@ killbuffer(struct buffer *bp)
 			bp1->b_altb = (bp->b_altb == bp1) ? NULL : bp->b_altb;
 		bp1 = bp1->b_bufp;
 	}
-	rec = LIST_FIRST(&bp->b_undo);
+	rec = TAILQ_FIRST(&bp->b_undo);
+
 	while (rec != NULL) {
-		next = LIST_NEXT(rec, next);
+		next = TAILQ_NEXT(rec, next);
 		free_undo_record(rec);
 		rec = next;
 	}
@@ -263,7 +276,7 @@ listbuffers(int f, int n)
 		initialized = 1;
 	}
 
-	if ((bp = makelist()) == NULL || (wp = popbuf(bp)) == NULL)
+	if ((bp = makelist()) == NULL || (wp = popbuf(bp, WNONE)) == NULL)
 		return (FALSE);
 	wp->w_dotp = bp->b_dotp; /* fix up if window already on screen */
 	wp->w_doto = bp->b_doto;
@@ -379,7 +392,7 @@ listbuf_goto_buffer_helper(int f, int n, int only)
 	if (bp == NULL)
 		goto cleanup;
 
-	if ((wp = popbuf(bp)) == NULL)
+	if ((wp = popbuf(bp, WNONE)) == NULL)
 		goto cleanup;
 	curbp = bp;
 	curwp = wp;
@@ -499,6 +512,7 @@ bnew(const char *bname)
 	struct buffer	*bp;
 	struct line	*lp;
 	int		 i;
+	size_t		len;
 
 	bp = calloc(1, sizeof(struct buffer));
 	if (bp == NULL) {
@@ -515,10 +529,16 @@ bnew(const char *bname)
 	bp->b_markp = NULL;
 	bp->b_marko = 0;
 	bp->b_flag = defb_flag;
+	/* if buffer name starts and ends with '*', we ignore changes */
+	len = strlen(bname);
+	if (len) {
+		if (bname[0] == '*' && bname[len - 1] == '*')
+			bp->b_flag |= BFIGNDIRTY;
+	}
 	bp->b_nwnd = 0;
 	bp->b_headp = lp;
 	bp->b_nmodes = defb_nmodes;
-	LIST_INIT(&bp->b_undo);
+	TAILQ_INIT(&bp->b_undo);
 	bp->b_undoptr = NULL;
 	memset(&bp->b_undopos, 0, sizeof(bp->b_undopos));
 	i = 0;
@@ -558,7 +578,8 @@ bclear(struct buffer *bp)
 	struct line	*lp;
 	int		 s;
 
-	if ((bp->b_flag & BFCHG) != 0 &&	/* Changed. */
+	/* Has buffer changed, and do we care? */
+	if (!(bp->b_flag & BFIGNDIRTY) && (bp->b_flag & BFCHG) != 0 &&
 	    (s = eyesno("Buffer modified; kill anyway")) != TRUE)
 		return (s);
 	bp->b_flag &= ~BFCHG;	/* Not changed		 */
@@ -589,7 +610,7 @@ showbuffer(struct buffer *bp, struct mgwin *wp, int flags)
 		bp->b_flag |= BFDIRTY;
 
 	if (wp->w_bufp == bp) {	/* Easy case! */
-		wp->w_flag |= flags;
+		wp->w_rflag |= flags;
 		wp->w_dotp = bp->b_dotp;
 		wp->w_doto = bp->b_doto;
 		return (TRUE);
@@ -627,7 +648,7 @@ showbuffer(struct buffer *bp, struct mgwin *wp, int flags)
 				wp->w_markline = owp->w_markline;
 				break;
 			}
-	wp->w_flag |= WFMODE | flags;
+	wp->w_rflag |= WFMODE | flags;
 	return (TRUE);
 }
 
@@ -664,17 +685,33 @@ augbname(char *bn, const char *fn, size_t bs)
  * Returns a status.
  */
 struct mgwin *
-popbuf(struct buffer *bp)
+popbuf(struct buffer *bp, int flags)
 {
 	struct mgwin	*wp;
 
 	if (bp->b_nwnd == 0) {	/* Not on screen yet.	 */
-		if ((wp = wpopup()) == NULL)
-			return (NULL);
+		/* 
+		 * Pick a window for a pop-up.
+		 * If only one window, split the screen.
+		 * Flag the new window as ephemeral
+		 */
+		if (wheadp->w_wndp == NULL &&
+		    splitwind(FFOTHARG, flags) == FALSE)
+ 			return (NULL);
+
+		/*
+		 * Pick the uppermost window that isn't
+		 * the current window. An LRU algorithm
+		 * might be better. Return a pointer, or NULL on error. 
+		 */
+		wp = wheadp;
+
+		while (wp != NULL && wp == curwp)
+			wp = wp->w_wndp;
 	} else
 		for (wp = wheadp; wp != NULL; wp = wp->w_wndp)
 			if (wp->w_bufp == bp) {
-				wp->w_flag |= WFFULL | WFFRAME;
+				wp->w_rflag |= WFFULL | WFFRAME;
 				return (wp);
 			}
 	if (showbuffer(bp, wp, WFFULL) != TRUE)
@@ -734,7 +771,7 @@ bufferinsert(int f, int n)
 		while (nline-- && lback(clp) != curbp->b_headp)
 			clp = lback(clp);
 		curwp->w_linep = clp;	/* adjust framing.	*/
-		curwp->w_flag |= WFFULL;
+		curwp->w_rflag |= WFFULL;
 	}
 	return (TRUE);
 }
@@ -752,7 +789,7 @@ notmodified(int f, int n)
 	wp = wheadp;		/* Update mode lines.	 */
 	while (wp != NULL) {
 		if (wp->w_bufp == curbp)
-			wp->w_flag |= WFMODE;
+			wp->w_rflag |= WFMODE;
 		wp = wp->w_wndp;
 	}
 	ewprintf("Modification-flag cleared");
@@ -765,7 +802,7 @@ notmodified(int f, int n)
  * help functions.
  */
 int
-popbuftop(struct buffer *bp)
+popbuftop(struct buffer *bp, int flags)
 {
 	struct mgwin *wp;
 
@@ -776,10 +813,10 @@ popbuftop(struct buffer *bp)
 			if (wp->w_bufp == bp) {
 				wp->w_dotp = bp->b_dotp;
 				wp->w_doto = 0;
-				wp->w_flag |= WFFULL;
+				wp->w_rflag |= WFFULL;
 			}
 	}
-	return (popbuf(bp) != NULL);
+	return (popbuf(bp, flags) != NULL);
 }
 #endif
 
@@ -810,8 +847,10 @@ error:
 }
 
 /*
- * Ensures a buffer has not been modified elsewhere.
- * Returns TRUE if it has NOT. FALSE or ABORT otherwise
+ * Ensures a buffer has not been modified elsewhere; e.g. on disk.
+ * Prompt the user if it has.
+ * Returns TRUE if it has NOT (i.e. buffer is ok to edit).
+ * FALSE or ABORT otherwise
  */
 int
 checkdirty(struct buffer *bp)

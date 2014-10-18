@@ -1,4 +1,4 @@
-/* $OpenBSD: undo.c,v 1.47 2008/09/15 16:13:35 kjell Exp $ */
+/* $OpenBSD: undo.c,v 1.50 2010/06/30 19:12:54 oga Exp $ */
 /*
  * This file is in the public domain
  */
@@ -11,7 +11,7 @@
 /*
  * Local variables
  */
-static LIST_HEAD(, undo_rec)	 undo_free;
+static struct undoq		 undo_free;
 static int			 undo_free_num;
 static int			 boundary_flag = TRUE;
 static int			 undo_enable_flag = TRUE;
@@ -82,9 +82,10 @@ new_undo_record(void)
 {
 	struct undo_rec *rec;
 
-	rec = LIST_FIRST(&undo_free);
+	rec = TAILQ_FIRST(&undo_free);
 	if (rec != NULL) {
-		LIST_REMOVE(rec, next);	/* Remove it from the free-list */
+		/* Remove it from the free-list */
+		TAILQ_REMOVE(&undo_free, rec, next);
 		undo_free_num--;
 	} else {
 		if ((rec = malloc(sizeof(*rec))) == NULL)
@@ -104,7 +105,7 @@ free_undo_record(struct undo_rec *rec)
 	 * On the first run, do initialisation of the free list.
 	 */
 	if (initialised == 0) {
-		LIST_INIT(&undo_free);
+		TAILQ_INIT(&undo_free);
 		initialised = 1;
 	}
 	if (rec->content != NULL) {
@@ -117,7 +118,7 @@ free_undo_record(struct undo_rec *rec)
 	}
 	undo_free_num++;
 
-	LIST_INSERT_HEAD(&undo_free, rec, next);
+	TAILQ_INSERT_HEAD(&undo_free, rec, next);
 }
 
 /*
@@ -129,10 +130,10 @@ drop_oldest_undo_record(void)
 {
 	struct undo_rec *rec;
 
-	rec = LIST_END(&curbp->b_undo);
+	rec = TAILQ_LAST(&curbp->b_undo, undoq);
 	if (rec != NULL) {
 		undo_free_num--;
-		LIST_REMOVE(rec, next);
+		TAILQ_REMOVE(&curbp->b_undo, rec, next);
 		free_undo_record(rec);
 		return (1);
 	}
@@ -144,7 +145,7 @@ lastrectype(void)
 {
 	struct undo_rec *rec;
 
-	if ((rec = LIST_FIRST(&curbp->b_undo)) != NULL)
+	if ((rec = TAILQ_FIRST(&curbp->b_undo)) != NULL)
 		return (rec->type);
 	return (0);
 }
@@ -227,7 +228,7 @@ undo_add_boundary(int f, int n)
 	rec = new_undo_record();
 	rec->type = BOUNDARY;
 
-	LIST_INSERT_HEAD(&curbp->b_undo, rec, next);
+	TAILQ_INSERT_HEAD(&curbp->b_undo, rec, next);
 
 	return (TRUE);
 }
@@ -243,7 +244,7 @@ undo_add_modified(void)
 	rec = new_undo_record();
 	rec->type = MODIFIED;
 
-	LIST_INSERT_HEAD(&curbp->b_undo, rec, next);
+	TAILQ_INSERT_HEAD(&curbp->b_undo, rec, next);
 
 	return;
 }
@@ -266,7 +267,7 @@ undo_add_insert(struct line *lp, int offset, int size)
 	/*
 	 * We try to reuse the last undo record to `compress' things.
 	 */
-	rec = LIST_FIRST(&curbp->b_undo);
+	rec = TAILQ_FIRST(&curbp->b_undo);
 	if (rec != NULL && rec->type == INSERT) {
 		if (rec->pos + rec->region.r_size == pos) {
 			rec->region.r_size += reg.r_size;
@@ -285,7 +286,7 @@ undo_add_insert(struct line *lp, int offset, int size)
 
 	undo_add_boundary(FFRAND, 1);
 
-	LIST_INSERT_HEAD(&curbp->b_undo, rec, next);
+	TAILQ_INSERT_HEAD(&curbp->b_undo, rec, next);
 
 	return (TRUE);
 }
@@ -294,7 +295,7 @@ undo_add_insert(struct line *lp, int offset, int size)
  * This of course must be done _before_ the actual deletion is done.
  */
 int
-undo_add_delete(struct line *lp, int offset, int size)
+undo_add_delete(struct line *lp, int offset, int size, int isreg)
 {
 	struct region	reg;
 	struct	undo_rec *rec;
@@ -311,20 +312,22 @@ undo_add_delete(struct line *lp, int offset, int size)
 
 	if (offset == llength(lp))	/* if it's a newline... */
 		undo_add_boundary(FFRAND, 1);
-	else if ((rec = LIST_FIRST(&curbp->b_undo)) != NULL) {
+	else if ((rec = TAILQ_FIRST(&curbp->b_undo)) != NULL) {
 		/*
 		 * Separate this command from the previous one if we're not
 		 * just before the previous record...
 		 */
-		if (rec->type == DELETE) {
+		if (!isreg && rec->type == DELETE) {
 			if (rec->pos - rec->region.r_size != pos)
 				undo_add_boundary(FFRAND, 1);
 		}
 	}
 	rec = new_undo_record();
 	rec->pos = pos;
-
-	rec->type = DELETE;
+	if (isreg)
+		rec->type = DELREG;
+	else
+		rec->type = DELETE;
 	memmove(&rec->region, &reg, sizeof(struct region));
 	do {
 		rec->content = malloc(reg.r_size + 1);
@@ -335,10 +338,10 @@ undo_add_delete(struct line *lp, int offset, int size)
 
 	region_get_data(&reg, rec->content, reg.r_size);
 
-	if (lastrectype() != DELETE)
+	if (isreg || lastrectype() != DELETE)
 		undo_add_boundary(FFRAND, 1);
 
-	LIST_INSERT_HEAD(&curbp->b_undo, rec, next);
+	TAILQ_INSERT_HEAD(&curbp->b_undo, rec, next);
 
 	return (TRUE);
 }
@@ -353,7 +356,7 @@ undo_add_change(struct line *lp, int offset, int size)
 		return (TRUE);
 	undo_add_boundary(FFRAND, 1);
 	boundary_flag = FALSE;
-	undo_add_delete(lp, offset, size);
+	undo_add_delete(lp, offset, size, 0);
 	undo_add_insert(lp, offset, size);
 	boundary_flag = TRUE;
 	undo_add_boundary(FFRAND, 1);
@@ -381,7 +384,7 @@ undo_dump(int f, int n)
 		return (FALSE);
 	bp->b_flag |= BFREADONLY;
 	bclear(bp);
-	popbuf(bp);
+	popbuf(bp, WNONE);
 
 	for (wp = wheadp; wp != NULL; wp = wp->w_wndp) {
 		if (wp->w_bufp == bp) {
@@ -391,12 +394,12 @@ undo_dump(int f, int n)
 	}
 
 	num = 0;
-	for (rec = LIST_FIRST(&curbp->b_undo); rec != NULL;
-	    rec = LIST_NEXT(rec, next)) {
+	TAILQ_FOREACH(rec, &curbp->b_undo, next) {
 		num++;
 		snprintf(buf, sizeof(buf),
 		    "%d:\t %s at %d ", num,
 		    (rec->type == DELETE) ? "DELETE":
+		    (rec->type == DELREG) ? "DELREGION":
 		    (rec->type == INSERT) ? "INSERT":
 		    (rec->type == BOUNDARY) ? "----" :
 		    (rec->type == MODIFIED) ? "MODIFIED": "UNKNOWN",
@@ -474,7 +477,7 @@ undo(int f, int n)
 
 	/* first invocation, make ptr point back to the top of the list */
 	if ((ptr == NULL && nulled == TRUE) ||  rptcount == 0) {
-		ptr = LIST_FIRST(&curbp->b_undo);
+		ptr = TAILQ_FIRST(&curbp->b_undo);
 		nulled = TRUE;
 	}
 
@@ -482,8 +485,8 @@ undo(int f, int n)
 	while (n--) {
 		/* if we have a spurious boundary, free it and move on.... */
 		while (ptr && ptr->type == BOUNDARY) {
-			nptr = LIST_NEXT(ptr, next);
-			LIST_REMOVE(ptr, next);
+			nptr = TAILQ_NEXT(ptr, next);
+			TAILQ_REMOVE(&curbp->b_undo, ptr, next);
 			free_undo_record(ptr);
 			ptr = nptr;
 		}
@@ -547,6 +550,10 @@ undo(int f, int n)
 				curwp->w_dotp = lp;
 				curwp->w_doto = offset;
 				break;
+			case DELREG:
+				region_put_data(ptr->content,
+				    ptr->region.r_size);
+				break;
 			case BOUNDARY:
 				done = 1;
 				break;
@@ -558,7 +565,7 @@ undo(int f, int n)
 			}
 
 			/* And move to next record */
-			ptr = LIST_NEXT(ptr, next);
+			ptr = TAILQ_NEXT(ptr, next);
 		} while (ptr != NULL && !done);
 
 		boundary_flag = save;

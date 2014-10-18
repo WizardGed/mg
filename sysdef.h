@@ -1,4 +1,4 @@
-/*	$OpenBSD: sysdef.h,v 1.15 2006/08/01 22:16:03 jason Exp $	*/
+/*	$OpenBSD: sysdef.h,v 1.16 2008/09/15 16:11:35 kjell Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -46,7 +46,7 @@ struct fileinfo {
 	uid_t		fi_uid;
 	gid_t		fi_gid;
 	mode_t		fi_mode;
-	struct timespec fi_mtime;       /* Last modified time */
+	struct timespec	fi_mtime;	/* Last modified time */
 };
 
 /* extra headers missing from glibc */
