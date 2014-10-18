@@ -1,7 +1,7 @@
 Source: mg
 Section: editors
 Priority: optional
-Maintainer: Trent W. Buck <trentbuck@gmail.com>
+Maintainer: Debian QA Group <packages@qa.debian.org>
 DM-Upload-Allowed: yes
 Build-Depends: debhelper (>= 7.0.50~), libncurses-dev
 Standards-Version: 3.8.0
