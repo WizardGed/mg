@@ -1,4 +1,4 @@
-/*	$OpenBSD: main.c,v 1.52 2006/06/01 05:34:52 jason Exp $	*/
+/*	$OpenBSD: main.c,v 1.54 2006/07/25 08:22:32 kjell Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -27,6 +27,17 @@ struct mgwin		*wheadp;			/* MGWIN listhead	*/
 char		 pat[NPAT];			/* pattern		*/
 
 static void	 edinit(PF);
+static void usage(void);
+
+extern char	*__progname;
+
+static void
+usage()
+{
+	fprintf(stderr, "usage: %s [+line] [-hn] [-f mode] [file ...]\n",
+	    __progname);
+	exit(1);
+}
 
 int
 main(int argc, char **argv)
@@ -36,7 +47,7 @@ main(int argc, char **argv)
 	int	 o, i, nfiles;
 	int	 nobackups = 0;
 
-	while ((o = getopt(argc, argv, "nf:")) != -1)
+	while ((o = getopt(argc, argv, "hnf:")) != -1)
 		switch (o) {
 		case 'n':
 			nobackups = 1;
@@ -47,8 +58,10 @@ main(int argc, char **argv)
 				    "initial function");
 			init_fcn_name = optarg;
 			break;
+		case 'h':
+			/* FALLTHRU */
 		default:
-			errx(1, "usage: mg [options] [file ...]");
+			usage();
 		}
 	argc -= optind;
 	argv += optind;
@@ -183,7 +196,7 @@ edinit(PF init_fcn)
 	wheadp = wp;
 	curwp = wp;
 	wp->w_wndp = NULL;			/* Initialize window.	 */
-	wp->w_linep = wp->w_dotp = bp->b_linep;
+	wp->w_linep = wp->w_dotp = bp->b_headp;
 	wp->w_ntrows = nrow - 2;		/* 2 = mode, echo.	 */
 	wp->w_flag = WFMODE | WFFULL;		/* Full.		 */
 

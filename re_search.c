@@ -1,4 +1,4 @@
-/*	$OpenBSD: re_search.c,v 1.23 2006/05/28 23:30:16 kjell Exp $	*/
+/*	$OpenBSD: re_search.c,v 1.24 2006/07/25 08:22:32 kjell Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -347,7 +347,7 @@ re_forwsrch(void)
 		 * Don't start matching past end of line -- must move to
 		 * beginning of next line, unless at end of file.
 		 */
-		if (clp != curbp->b_linep) {
+		if (clp != curbp->b_headp) {
 			clp = lforw(clp);
 			tbo = 0;
 		}
@@ -355,7 +355,7 @@ re_forwsrch(void)
 	 * Note this loop does not process the last line, but this editor
 	 * always makes the last line empty so this is good.
 	 */
-	while (clp != (curbp->b_linep)) {
+	while (clp != (curbp->b_headp)) {
 		regex_match[0].rm_so = tbo;
 		regex_match[0].rm_eo = llength(clp);
 		error = regexec_new(&re_buff, ltext(clp), RE_NMATCH, regex_match,
@@ -401,7 +401,7 @@ re_backsrch(void)
 	 * Note this loop does not process the last line, but this editor
 	 * always makes the last line empty so this is good.
 	 */
-	while (clp != (curbp->b_linep)) {
+	while (clp != (curbp->b_headp)) {
 		regex_match[0].rm_so = 0;
 		regex_match[0].rm_eo = llength(clp);
 		lastmatch.rm_so = -1;
@@ -553,7 +553,7 @@ killmatches(int cond)
 		/* Consider dot on next line */
 		clp = lforw(clp);
 
-	while (clp != (curbp->b_linep)) {
+	while (clp != (curbp->b_headp)) {
 		/* see if line matches */
 		regex_match[0].rm_so = 0;
 		regex_match[0].rm_eo = llength(clp);
@@ -628,7 +628,7 @@ countmatches(int cond)
 		/* Consider dot on next line */
 		clp = lforw(clp);
 
-	while (clp != (curbp->b_linep)) {
+	while (clp != (curbp->b_headp)) {
 		/* see if line matches */
 		regex_match[0].rm_so = 0;
 		regex_match[0].rm_eo = llength(clp);

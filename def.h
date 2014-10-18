@@ -1,4 +1,4 @@
-/*	$OpenBSD: def.h,v 1.92 2006/06/01 09:00:50 kjell Exp $	*/
+/*	$OpenBSD: def.h,v 1.95 2006/07/25 08:27:09 kjell Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -238,14 +238,14 @@ struct undo_rec;
  * dot and mark in the header, but this is only valid if the buffer
  * is not being displayed (that is, if "b_nwnd" is 0). The text for
  * the buffer is kept in a circularly linked list of lines, with
- * a pointer to the header line in "b_linep".
+ * a pointer to the header line in "b_headp".
  */
 struct buffer {
 	struct list	 b_list;	/* buffer list pointer		 */
 	struct buffer	*b_altb;	/* Link to alternate buffer	 */
 	struct line	*b_dotp;	/* Link to "." line structure	 */
 	struct line	*b_markp;	/* ditto for mark		 */
-	struct line	*b_linep;	/* Link to the header line	 */
+	struct line	*b_headp;	/* Link to the header line	 */
 	struct maps_s	*b_modes[PBMODES]; /* buffer modes		 */
 	int		 b_doto;	/* Offset of "." in above line	 */
 	int		 b_marko;	/* ditto for the "mark"		 */
@@ -265,6 +265,10 @@ struct buffer {
 #define b_bufp	b_list.l_p.x_bp
 #define b_bname b_list.l_name
 
+/* Some helper macros, in case they ever change to functions */
+#define bfirstlp(buf)	(lforw((buf)->b_headp))
+#define blastlp(buf)	(lback((buf)->b_headp))
+
 #define BFCHG	0x01			/* Changed.			 */
 #define BFBAK	0x02			/* Need to make a backup.	 */
 #ifdef	NOTAB
@@ -281,7 +285,8 @@ struct undo_rec {
 	enum {
 		INSERT = 1,
 		DELETE,
-		BOUNDARY
+		BOUNDARY,
+		MODIFIED
 	} type;
 	struct region	 region;
 	int		 pos;
@@ -307,11 +312,7 @@ void		 ttnowindow(void);
 void		 ttcolor(int);
 void		 ttresize(void);
 
-#ifdef __GLIBC__
-volatile int winch_flag; 	/* sig_atomic_t is just an int */
-#else
 volatile sig_atomic_t winch_flag;
-#endif
 
 /* ttyio.c */
 void		 ttopen(void);
@@ -604,6 +605,7 @@ void		 free_undo_record(struct undo_rec *);
 int		 undo_dump(int, int);
 int		 undo_enable(int);
 void		 undo_add_boundary(void);
+void		 undo_add_modified(void);
 int		 undo_add_insert(struct line *, int, int);
 int		 undo_add_delete(struct line *, int, int);
 void		 undo_no_boundary(int);

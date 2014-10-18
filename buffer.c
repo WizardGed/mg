@@ -1,4 +1,4 @@
-/*	$OpenBSD: buffer.c,v 1.60 2006/06/01 09:00:50 kjell Exp $	*/
+/*	$OpenBSD: buffer.c,v 1.63 2006/07/25 08:27:09 kjell Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -170,7 +170,7 @@ killbuffer(struct buffer *bp)
 	}
 	if (bp == curbp)
 		curbp = bp1;
-	free(bp->b_linep);			/* Release header line.  */
+	free(bp->b_headp);			/* Release header line.  */
 	bp2 = NULL;				/* Find the header.	 */
 	bp1 = bheadp;
 	while (bp1 != bp) {
@@ -307,8 +307,8 @@ makelist(void)
 
 		nbytes = 0;			/* Count bytes in buf.	 */
 		if (bp != blp) {
-			lp = lforw(bp->b_linep);
-			while (lp != bp->b_linep) {
+			lp = bfirstlp(bp);
+			while (lp != bp->b_headp) {
 				nbytes += llength(lp) + 1;
 				lp = lforw(lp);
 			}
@@ -329,7 +329,7 @@ makelist(void)
 		    bp->b_fname) == FALSE)
 			return (NULL);
 	}
-	blp->b_dotp = lforw(blp->b_linep);	/* put dot at beginning of
+	blp->b_dotp = bfirstlp(blp);		/* put dot at beginning of
 						 * buffer */
 	blp->b_doto = 0;
 	return (blp);				/* All done		 */
@@ -418,10 +418,10 @@ addlinef(struct buffer *bp, char *fmt, ...)
 	lp->l_used = strlen(lp->l_text);
 	va_end(ap);
 
-	bp->b_linep->l_bp->l_fp = lp;		/* Hook onto the end	 */
-	lp->l_bp = bp->b_linep->l_bp;
-	bp->b_linep->l_bp = lp;
-	lp->l_fp = bp->b_linep;
+	bp->b_headp->l_bp->l_fp = lp;		/* Hook onto the end	 */
+	lp->l_bp = bp->b_headp->l_bp;
+	bp->b_headp->l_bp = lp;
+	lp->l_fp = bp->b_headp;
 	bp->b_lines++;
 
 	return (TRUE);
@@ -523,7 +523,7 @@ bnew()
 	bp->b_marko = 0;
 	bp->b_flag = defb_flag;
 	bp->b_nwnd = 0;
-	bp->b_linep = lp;
+	bp->b_headp = lp;
 	bp->b_nmodes = defb_nmodes;
 	LIST_INIT(&bp->b_undo);
 	bp->b_undoptr = NULL;
@@ -540,7 +540,7 @@ bnew()
 	bp->b_bufp = bheadp;
 	bheadp = bp;
 	bp->b_dotline = bp->b_markline = 1;
-	bp->b_lines = 0;
+	bp->b_lines = 1;
 
 	return (bp);
 }
@@ -565,14 +565,14 @@ bclear(struct buffer *bp)
 	    (s = eyesno("Buffer modified; kill anyway")) != TRUE)
 		return (s);
 	bp->b_flag &= ~BFCHG;	/* Not changed		 */
-	while ((lp = lforw(bp->b_linep)) != bp->b_linep)
+	while ((lp = lforw(bp->b_headp)) != bp->b_headp)
 		lfree(lp);
-	bp->b_dotp = bp->b_linep;	/* Fix dot */
+	bp->b_dotp = bp->b_headp;	/* Fix dot */
 	bp->b_doto = 0;
 	bp->b_markp = NULL;	/* Invalidate "mark"	 */
 	bp->b_marko = 0;
 	bp->b_dotline = bp->b_markline = 1;
-	bp->b_lines = 0;
+	bp->b_lines = 1;
 
 	return (TRUE);
 }
@@ -708,12 +708,12 @@ bufferinsert(int f, int n)
 	}
 	/* insert the buffer */
 	nline = 0;
-	clp = lforw(bp->b_linep);
+	clp = bfirstlp(bp);
 	for (;;) {
 		for (clo = 0; clo < llength(clp); clo++)
 			if (linsert(1, lgetc(clp, clo)) == FALSE)
 				return (FALSE);
-		if ((clp = lforw(clp)) == bp->b_linep)
+		if ((clp = lforw(clp)) == bp->b_headp)
 			break;
 		if (newline(FFRAND, 1) == FALSE)	/* fake newline */
 			return (FALSE);
@@ -726,7 +726,7 @@ bufferinsert(int f, int n)
 
 	clp = curwp->w_linep;		/* cosmetic adjustment	*/
 	if (curwp->w_dotp == clp) {	/* for offscreen insert */
-		while (nline-- && lback(clp) != curbp->b_linep)
+		while (nline-- && lback(clp) != curbp->b_headp)
 			clp = lback(clp);
 		curwp->w_linep = clp;	/* adjust framing.	*/
 		curwp->w_flag |= WFFULL;
@@ -764,7 +764,7 @@ popbuftop(struct buffer *bp)
 {
 	struct mgwin *wp;
 
-	bp->b_dotp = lforw(bp->b_linep);
+	bp->b_dotp = bfirstlp(bp);
 	bp->b_doto = 0;
 	if (bp->b_nwnd != 0) {
 		for (wp = wheadp; wp != NULL; wp = wp->w_wndp)

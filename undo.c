@@ -1,6 +1,7 @@
-/* $OpenBSD: undo.c,v 1.38 2005/12/20 05:04:28 kjell Exp $ */
+/* $OpenBSD: undo.c,v 1.41 2006/07/25 08:22:32 kjell Exp $ */
 /*
  * Copyright (c) 2002 Vincent Labrecque <vincent@openbsd.org>
+ * Copyright (c) 2005, 2006 Kjell Wooding <kjell@openbsd.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +51,7 @@ int undo_disable_flag;
  * Local functions
  */
 static int find_dot(struct line *, int);
-static int find_lo(int, struct line **, int *);
+static int find_lo(int, struct line **, int *, int *);
 static struct undo_rec *new_undo_record(void);
 static int drop_oldest_undo_record(void);
 
@@ -68,9 +69,9 @@ find_dot(struct line *lp, int off)
 	int	 count = 0;
 	struct line	*p;
 
-	for (p = curbp->b_linep; p != lp; p = lforw(p)) {
+	for (p = curbp->b_headp; p != lp; p = lforw(p)) {
 		if (count != 0) {
-			if (p == curbp->b_linep) {
+			if (p == curbp->b_headp) {
 				ewprintf("Error: Undo stuff called with a"
 				    "nonexistent line");
 				return (FALSE);
@@ -84,21 +85,25 @@ find_dot(struct line *lp, int off)
 }
 
 static int
-find_lo(int pos, struct line **olp, int *offset)
+find_lo(int pos, struct line **olp, int *offset, int *lnum)
 {
 	struct line *p;
+	int lineno;
 
-	p = curbp->b_linep;
+	p = curbp->b_headp;
+	lineno = 0;
 	while (pos > llength(p)) {
 		pos -= llength(p) + 1;
-		if ((p = lforw(p)) == curbp->b_linep) {
+		if ((p = lforw(p)) == curbp->b_headp) {
 			*olp = NULL;
 			*offset = 0;
 			return (FALSE);
 		}
+		lineno++;
 	}
 	*olp = p;
 	*offset = pos;
+	*lnum = lineno;
 
 	return (TRUE);
 }
@@ -203,21 +208,39 @@ undo_no_boundary(int flag)
 
 /*
  * Record an undo boundary, unless 'nobound' is set via undo_no_boundary.
- * Does nothing if previous undo entry is already a boundary.
+ * Does nothing if previous undo entry is already a boundary or 'modified' flag.
  */
 void
 undo_add_boundary(void)
 {
 	struct undo_rec *rec;
+	int last;
 
 	if (nobound)
 		return;
 
-	if (lastrectype() == BOUNDARY)
+	last = lastrectype();
+	if (last == BOUNDARY || last == MODIFIED)
 		return;
 
 	rec = new_undo_record();
 	rec->type = BOUNDARY;
+
+	LIST_INSERT_HEAD(&curbp->b_undo, rec, next);
+
+	return;
+}
+
+/*
+ * Record an undo "modified" boundary
+ */
+void
+undo_add_modified(void)
+{
+	struct undo_rec *rec;
+
+	rec = new_undo_record();
+	rec->type = MODIFIED;
 
 	LIST_INSERT_HEAD(&curbp->b_undo, rec, next);
 
@@ -361,7 +384,7 @@ undo_dump(int f, int n)
 
 	for (wp = wheadp; wp != NULL; wp = wp->w_wndp) {
 		if (wp->w_bufp == bp) {
-			wp->w_dotp = bp->b_linep;
+			wp->w_dotp = bp->b_headp;
 			wp->w_doto = 0;
 		}
 	}
@@ -374,7 +397,8 @@ undo_dump(int f, int n)
 		    "%d:\t %s at %d ", num,
 		    (rec->type == DELETE) ? "DELETE":
 		    (rec->type == INSERT) ? "INSERT":
-		    (rec->type == BOUNDARY) ? "----" : "UNKNOWN",
+		    (rec->type == BOUNDARY) ? "----" :
+		    (rec->type == MODIFIED) ? "MODIFIED": "UNKNOWN",
 		    rec->pos);
 
 		if (rec->content) {
@@ -438,6 +462,7 @@ undo(int f, int n)
 	struct line	*lp;
 	int		 offset, save, dot;
 	static int	 nulled = FALSE;
+	int		 lineno;
 
 	dot = find_dot(curwp->w_dotp, curwp->w_doto);
 
@@ -486,19 +511,21 @@ undo(int f, int n)
 			/*
 			 * Move to where this has to apply
 			 *
-			 * Boundaries are put as position 0 (to save
-			 * lookup time in find_dot) so we must
-			 * not move there...
+			 * Boundaries (and the modified flag)  are put as
+			 * position 0 (to save lookup time in find_dot)
+			 * so we must not move there...
 			 */
-			if (ptr->type != BOUNDARY) {
+			if (ptr->type != BOUNDARY && ptr->type != MODIFIED) {
 				if (find_lo(ptr->pos, &lp,
-				    &offset) == FALSE) {
+				    &offset, &lineno) == FALSE) {
 					ewprintf("Internal error in Undo!");
 					rval = FALSE;
 					break;
 				}
 				curwp->w_dotp = lp;
 				curwp->w_doto = offset;
+				curwp->w_markline = curwp->w_dotline;
+				curwp->w_dotline = lineno;
 			}
 
 			/*
@@ -514,6 +541,9 @@ undo(int f, int n)
 				break;
 			case BOUNDARY:
 				done = 1;
+				break;
+			case MODIFIED:
+				curbp->b_flag &= ~BFCHG;
 				break;
 			default:
 				break;
