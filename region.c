@@ -1,4 +1,4 @@
-/*	$OpenBSD: region.c,v 1.25 2006/12/16 17:00:03 kjell Exp $	*/
+/*	$OpenBSD: region.c,v 1.27 2008/09/15 16:11:35 kjell Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -16,7 +16,7 @@ static	int	setsize(struct region *, RSIZE);
 
 /*
  * Kill the region.  Ask "getregion" to figure out the bounds of the region.
- * Move "." to the start, and kill the characters.
+ * Move "." to the start, and kill the characters. Mark is cleared afterwards.
  */
 /* ARGSUSED */
 int
@@ -34,14 +34,15 @@ killregion(int f, int n)
 	curwp->w_dotp = region.r_linep;
 	curwp->w_doto = region.r_offset;
 	s = ldelete(region.r_size, KFORW);
-	if (s == TRUE && curwp->w_dotline > curwp->w_markline)
-		curwp->w_dotline = curwp->w_markline;
+	clearmark(FFARG, 0);
+
 	return (s);
 }
 
 /*
- * Copy all of the characters in the region to the kill buffer.  Don't move
- * dot at all.  This is a bit like a kill region followed by a yank.
+ * Copy all of the characters in the region to the kill buffer,
+ * clearing the mark afterwards.
+ * This is a bit like a kill region followed by a yank.
  */
 /* ARGSUSED */
 int
@@ -78,6 +79,8 @@ copyregion(int f, int n)
 			++loffs;
 		}
 	}
+	clearmark(FFARG, 0);
+
 	return (TRUE);
 }
 
@@ -95,6 +98,8 @@ lowerregion(int f, int n)
 	struct region	 region;
 	int	 loffs, c, s;
 
+	if ((s = checkdirty(curbp)) != TRUE)
+		return (s);
 	if (curbp->b_flag & BFREADONLY) {
 		ewprintf("Buffer is read-only");
 		return (FALSE);
@@ -136,6 +141,8 @@ upperregion(int f, int n)
 	struct region	  region;
 	int	  loffs, c, s;
 
+	if ((s = checkdirty(curbp)) != TRUE)
+		return (s);
 	if (curbp->b_flag & BFREADONLY) {
 		ewprintf("Buffer is read-only");
 		return (FALSE);
@@ -258,6 +265,8 @@ prefixregion(int f, int n)
 	int	 nline;
 	int	 s;
 
+	if ((s = checkdirty(curbp)) != TRUE)
+		return (s);
 	if (curbp->b_flag & BFREADONLY) {
 		ewprintf("Buffer is read-only");
 		return (FALSE);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: main.c,v 1.57 2008/05/29 19:58:15 sobrado Exp $	*/
+/*	$OpenBSD: main.c,v 1.60 2008/06/13 18:51:02 kjell Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -46,6 +46,7 @@ main(int argc, char **argv)
 	PF	 init_fcn = NULL;
 	int	 o, i, nfiles;
 	int	 nobackups = 0;
+	struct buffer *bp;
 
 	while ((o = getopt(argc, argv, "nf:")) != -1)
 		switch (o) {
@@ -74,13 +75,13 @@ main(int argc, char **argv)
 	{
 		extern void grep_init(void);
 		extern void theo_init(void);
-		extern void mail_init(void);
+		extern void cmode_init(void);
 		extern void dired_init(void);
 
 		dired_init();
 		grep_init();
 		theo_init();
-		mail_init();
+		cmode_init();
 	}
 
 	if (init_fcn_name &&
@@ -104,6 +105,20 @@ main(int argc, char **argv)
 	if ((cp = startupfile(NULL)) != NULL)
 		(void)load(cp);
 #endif	/* !NO_STARTUP */
+
+	/*
+	 * Create scratch buffer now, killing old *init* buffer.
+	 * This causes *scratch* to be created and made curbp,
+	 * ensuring default modes are inherited from the startup
+	 * file correctly
+	 */
+
+	if ((bp = bfind("*init*", FALSE)) != NULL)
+		killbuffer(bp);
+
+	/* Force FFOTHARG=1 so that this mode is enabled, not simply toggled */
+	if (init_fcn)
+		init_fcn(FFOTHARG, 1);
 
 	if (nobackups)
 		makebkfile(FFARG, 0);
@@ -132,8 +147,9 @@ notnum:
 				if (readin(cp) != TRUE)
 					killbuffer(curbp);
 				else {
+					/* Ensure enabled, not just toggled */
 					if (init_fcn_name)
-						init_fcn(0, 1);
+						init_fcn(FFOTHARG, 1);
 					nfiles++;
 				}
 			}
@@ -176,6 +192,8 @@ notnum:
 
 /*
  * Initialize default buffer and window.
+ * Initially, buffer is named *init*. This is changed later
+ * to *scratch* after the startup files are read.
  */
 static void
 edinit(PF init_fcn)
@@ -184,7 +202,7 @@ edinit(PF init_fcn)
 	struct mgwin	*wp;
 
 	bheadp = NULL;
-	bp = bfind("*scratch*", TRUE);		/* Text buffer.		 */
+	bp = bfind("*init*", TRUE);		/* Text buffer.		 */
 	wp = new_window(bp);
 	if (wp == NULL)
 		panic("Out of memory");
@@ -197,9 +215,6 @@ edinit(PF init_fcn)
 	wp->w_linep = wp->w_dotp = bp->b_headp;
 	wp->w_ntrows = nrow - 2;		/* 2 = mode, echo.	 */
 	wp->w_flag = WFMODE | WFFULL;		/* Full.		 */
-
-	if (init_fcn)
-		init_fcn(0, 1);
 }
 
 /*

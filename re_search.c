@@ -382,10 +382,11 @@ re_forwsrch(void)
 static int
 re_backsrch(void)
 {
-	struct line		*clp;
+	struct line     *clp;
 	int		 tbo;
 	regmatch_t	 lastmatch;
 
+	lastmatch.rm_eo = 0;
 	clp = curwp->w_dotp;
 	tbo = curwp->w_doto;
 

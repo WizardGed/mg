@@ -27,7 +27,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef __GLIBC__		/* FreeWRT: only build this where needed */
+#if defined (__GLIBC__) || defined (__CYGWIN__)  /* FreeWRT: only build
+						      this where needed */
 char *fgetln(FILE *, size_t *);
 
 char *

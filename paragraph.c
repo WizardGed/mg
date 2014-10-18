@@ -1,4 +1,4 @@
-/*	$OpenBSD: paragraph.c,v 1.15 2006/11/17 08:45:31 kjell Exp $	*/
+/*	$OpenBSD: paragraph.c,v 1.17 2008/09/15 16:13:35 kjell Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -130,8 +130,7 @@ fillpara(int f, int n)
 	struct line	*eopline;	/* pointer to line just past EOP	*/
 	char	 wbuf[MAXWORD];	/* buffer for current word		*/
 
-	undo_add_boundary();
-	undo_boundary_enable(FALSE);
+	undo_boundary_enable(FFRAND, 0);
 
 	/* record the pointer to the line just past the EOP */
 	(void)gotoeop(FFRAND, 1);
@@ -237,8 +236,7 @@ fillpara(int f, int n)
 	(void)backchar(FFRAND, 1);
 	retval = TRUE;
 cleanup:
-	undo_boundary_enable(TRUE);
-	undo_add_boundary();
+	undo_boundary_enable(FFRAND, 1);
 	return (retval);
 }
 
@@ -336,7 +334,21 @@ fillword(int f, int n)
 int
 setfillcol(int f, int n)
 {
-	fillcol = ((f & FFARG) ? n : getcolpos());
-	ewprintf("Fill column set to %d", fillcol);
+	char buf[32], *rep;
+	const char *es;
+
+	if ((f & FFARG) != 0) {
+		fillcol = n;
+	} else {
+		if ((rep = eread("Set fill-column: ", buf, sizeof(buf),
+		    EFNEW | EFCR)) == NULL)
+			return (ABORT);
+		else if (rep[0] == '\0')
+			return (FALSE);
+		fillcol = strtonum(rep, 0, INT_MAX, &es);
+		if (es != NULL)
+			return (FALSE);
+		ewprintf("Fill column set to %d", fillcol);
+	}
 	return (TRUE);
 }

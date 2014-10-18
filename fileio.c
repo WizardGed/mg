@@ -1,4 +1,4 @@
-/*	$OpenBSD: fileio.c,v 1.80 2006/12/24 01:20:53 kjell Exp $	*/
+/*	$OpenBSD: fileio.c,v 1.82 2008/09/15 16:11:35 kjell Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -7,21 +7,26 @@
  */
 #include "def.h"
 
-#include <sys/stat.h>
+
 #include <sys/types.h>
+#include <sys/stat.h>
+
+#ifndef DEFFILEMODE   /* Not all platforms have this */
+#define	DEFFILEMODE	(S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)
+#endif
+
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/wait.h>
 
-#include "kbd.h"
-
 #include <fcntl.h>
 #include <limits.h>
 #include <dirent.h>
-/* #include <pwd.h> TESTING seems obsolete */
+#include <pwd.h>
 #include <string.h>
 #include <unistd.h>
-/* #include <ctype.h> TESTING idem */
+
+#include "kbd.h"
 
 static FILE	*ffp;
 
@@ -31,8 +36,6 @@ static FILE	*ffp;
 int
 ffropen(const char *fn, struct buffer *bp)
 {
-	struct stat	statbuf;
-
 	if ((ffp = fopen(fn, "r")) == NULL) {
 		if (errno == ENOENT)
 			return (FIOFNF);
@@ -43,13 +46,45 @@ ffropen(const char *fn, struct buffer *bp)
 	if (fisdir(fn) == TRUE)
 		return (FIODIR);
 
-	if (bp && fstat(fileno(ffp), &statbuf) == 0) {
-		/* set highorder bit to make sure this isn't all zero */
-		bp->b_fi.fi_mode = statbuf.st_mode | 0x8000;
-		bp->b_fi.fi_uid = statbuf.st_uid;
-		bp->b_fi.fi_gid = statbuf.st_gid;
-	}
+	ffstat(bp);
 
+	return (FIOSUC);
+}
+
+/*
+ * Update stat/dirty info
+ */
+void
+ffstat(struct buffer *bp)
+{
+	struct stat	sb;
+
+	if (bp && fstat(fileno(ffp), &sb) == 0) {
+		/* set highorder bit to make sure this isn't all zero */
+		bp->b_fi.fi_mode = sb.st_mode | 0x8000;
+		bp->b_fi.fi_uid = sb.st_uid;
+		bp->b_fi.fi_gid = sb.st_gid;
+                bp->b_fi.fi_mtime.tv_sec = sb.st_mtime;
+		bp->b_fi.fi_mtime.tv_nsec = 0;
+		/* Clear the ignore flag */
+		bp->b_flag &= ~(BFIGNDIRTY | BFDIRTY);
+	}
+}
+
+/*
+ * Update the status/dirty info. If there is an error,
+ * there's not a lot we can do.
+ */
+int
+fupdstat(struct buffer *bp)
+{
+	if ((ffp = fopen(bp->b_fname, "r")) == NULL) {
+		if (errno == ENOENT)
+			return (FIOFNF);
+		return (FIOERR);
+	}
+	ffstat(bp);
+	ffclose(bp);
 	return (FIOSUC);
 }
 
@@ -86,8 +121,10 @@ ffwopen(const char *fn, struct buffer *bp)
 	 * future writes will do the same thing.
 	 */
 	if (bp && bp->b_fi.fi_mode) {
+		int ret;
+
 		fchmod(fd, bp->b_fi.fi_mode & 07777);
-		fchown(fd, bp->b_fi.fi_uid, bp->b_fi.fi_gid);
+		ret = fchown(fd, bp->b_fi.fi_uid, bp->b_fi.fi_gid);
 	}
 	return (FIOSUC);
 }
@@ -262,20 +299,10 @@ fbackupfile(const char *fn)
 }
 
 /*
- * The string "fn" is a file name.  Perform any required appending of directory
- * name or case adjustments.  The same file should be referred to even if the
- * working directory changes.
+ * Convert "fn" to a canonicalized absolute filename, replacing
+ * a leading ~/ with the user's home dir, following symlinks, and
+ * and remove all occurrences of /./ and /../
  */
-#ifdef SYMBLINK
-#include <sys/types.h>
-#include <sys/stat.h>
-#ifndef MAXLINK
-#define MAXLINK 8		/* maximum symbolic links to follow */
-#endif
-#endif
-#include <pwd.h>
-extern char	*wdir;
-
 char *
 adjustname(const char *fn, int slashslash)
 {
@@ -312,10 +339,9 @@ adjustname(const char *fn, int slashslash)
 			ewprintf("Login name too long");
 			return (NULL);
 		}
-		if (ulen == 0) { /* ~/ or ~ */
-			pw = getpwuid(getuid());
-			(void)strlcpy(user, pw->pw_name, sizeof(user));
-		} else { /* ~user/ or ~user */
+		if (ulen == 0) /* ~/ or ~ */
+			(void)strlcpy(user, getlogin(), sizeof(user));
+		else { /* ~user/ or ~user */
 			memcpy(user, &fn[1], ulen);
 			user[ulen] = '\0';
 		}
@@ -451,7 +477,8 @@ struct list *
 make_file_list(char *buf)
 {
 	char		*dir, *file, *cp;
-	int		 len, preflen, ret;
+	size_t		 len, preflen;
+	int		 ret;
 	DIR		*dirp;
 	struct dirent	*dent;
 	struct list	*last, *current;
@@ -518,7 +545,11 @@ make_file_list(char *buf)
 	 * SV files are fairly short.  For BSD, something more general would
 	 * be required.
 	 */
+#ifdef  __CYGWIN__  /* Cygwin uses NAME_MAX for dirents */
+	if (preflen > NFILEN - NAME_MAX)
+#else
 	if (preflen > NFILEN - MAXNAMLEN)
+#endif
 		return (NULL);
 
 	/* loop over the specified directory, making up the list of files */
@@ -537,7 +568,10 @@ make_file_list(char *buf)
 
 	while ((dent = readdir(dirp)) != NULL) {
 		int isdir;
-#ifdef __GLIBC__		/* Linux uses reclen instead. */
+#if defined (__CYGWIN__)	/* Cygwin lacks reclen/namlen. */
+		if (strlen(dent->d_name) < len
+		    || memcmp(cp, dent->d_name, len) != 0)
+#elif defined (__GLIBC__)		/* Linux uses reclen instead. */
 		if (dent->d_reclen < len || memcmp(cp, dent->d_name, len) != 0)
 #else
 		if (dent->d_namlen < len || memcmp(cp, dent->d_name, len) != 0)
@@ -545,10 +579,15 @@ make_file_list(char *buf)
 			continue;
 
 		isdir = 0;
+
+#ifndef __CYGWIN__      /* No support for d_type in Cygwin, do all
+			     type cheking with stat. */
 		if (dent->d_type == DT_DIR) {
 			isdir = 1;
 		} else if (dent->d_type == DT_LNK ||
-			    dent->d_type == DT_UNKNOWN) {
+			    dent->d_type == DT_UNKNOWN)
+#endif
+		{
 			struct stat	statbuf;
 			char		statname[NFILEN + 2];
 
@@ -598,4 +637,24 @@ fisdir(const char *fname)
 		return (TRUE);
 
 	return (FALSE);
+}
+
+/*
+ * Check the mtime of the supplied filename.
+ * Return TRUE if last mtime matches, FALSE if not,
+ * If the stat fails, return TRUE and try the save anyway
+ */
+int
+fchecktime(struct buffer *bp)
+{
+	struct stat sb;
+
+	if (stat(bp->b_fname, &sb) == -1)
+		return (TRUE);
+
+        if (bp->b_fi.fi_mtime.tv_sec != sb.st_mtime)
+		return (FALSE);
+
+	return (TRUE);
+
 }

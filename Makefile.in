@@ -27,6 +27,7 @@ OBJS= 	autoexec.o \
 	basic.o \
 	buffer.o \
 	cinfo.o \
+	cmode.o \
 	dir.o \
 	dired.o \
 	display.o \
@@ -58,12 +59,13 @@ OBJS= 	autoexec.o \
 	word.o \
 	yank.o
 
-OBJS+=	grep.o theo.o mail.o
+OBJS+=	grep.o theo.o
 
 # # Portability stuff.
 CFLAGS+= 	@extraflags@
 OBJS+=		@extraobjs@
 LDFLAGS+= 	@extralibs@
+EXE_EXT=	@exe_ext@
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
@@ -78,7 +80,7 @@ distclean: clean
 	-rm -f Makefile config.log config.h *~ *.core core.*
 
 clean:
-	-rm -f *.o $(name)
+	-rm -f *.o $(name)$(EXE_EXT)
 
 
 install: $(name) $(name).1
@@ -92,7 +94,7 @@ install-strip: install
 
 uninstall:
 	rm -f \
-	$(DESTDIR)$(bindir)/$(name) \
+	$(DESTDIR)$(bindir)/$(name)$(EXE_EXT) \
 	$(DESTDIR)$(mandir)/man1/$(name).1
 
 rebuild:
