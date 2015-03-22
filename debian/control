@@ -1,7 +1,8 @@
 Source: mg
 Section: editors
 Priority: optional
-Maintainer: Debian QA Group <packages@qa.debian.org>
+Maintainer: Harald Dunkel <harald.dunkel@t-online.de>
+Uploaders: Tomasz Buchert <tomasz@debian.org>
 Build-Depends: debhelper (>= 9), libncurses-dev, libbsd-dev, pkg-config
 Standards-Version: 3.9.6
 Homepage: http://homepage.boetes.org/software/mg/
