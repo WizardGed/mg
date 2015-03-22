@@ -1,0 +1,21 @@
+From: Andreas Beckmann <anbe@debian.org>
+Date: Mon, 23 Mar 2015 11:54:35 +0100
+Subject: Use hardening CPPFLAGS
+
+---
+ GNUmakefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/GNUmakefile b/GNUmakefile
+index 619e294..f670deb 100644
+--- a/GNUmakefile
++++ b/GNUmakefile
+@@ -31,7 +31,7 @@ CURSES_LIBS=	-lcurses
+ CC?=		gcc
+ CFLAGS?=	-O2 -pipe
+ CFLAGS+=	-g -Wall
+-CPPFLAGS=	-DFKEYS -DREGEX -DXKEYS
++CPPFLAGS+=	-DFKEYS -DREGEX -DXKEYS
+ CPPFLAGS+=	$(BSD_CPPFLAGS) -D__dead=__dead2
+ LIBS=		$(CURSES_LIBS) $(BSD_LIBS)
+ 
