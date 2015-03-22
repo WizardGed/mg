@@ -1,21 +1,17 @@
 #!/usr/bin/make -f
+
+DH_VERBOSE=1
+# export DH_OPTIONS=-v
+
+MAKE_VARS=DESTDIR=debian/mg prefix=/usr mandir=/usr/share/man CURSES_LIBS=-ltinfo
+
 %:
 	dh $@ --parallel
 
-# mg's ./configure script is not made by autoconf, and it does not
-# accept arguments.  To make users realize this, ./configure exits if
-# it is passed arguments -- which dh_auto_configure does.  Therefore,
-# we need an exception to invoke it manually.
-override_dh_auto_configure:
-	./configure
+override_dh_auto_build:
+	$(MAKE) $(MAKE_VARS)
 
 override_dh_auto_install:
-# We need to invoke "make install" manually to set up prefix=/usr and such.
-	$(MAKE) install DESTDIR=debian/mg prefix=/usr mandir=/usr/share/man
+	$(MAKE) install $(MAKE_VARS)
 # Install the ".mg" example config manually, as debhelper can't rename
 	install -D -m444 .mg debian/mg/usr/share/doc/mg/examples/dot_mg
-
-# For use with a new clone of debian/ from darcs.debian.org.
-get-orig-source:
-	uscan --download-current-version
-	tar --transform 's|^[^/]\+||' -xf ../mg_`dpkg-parsechangelog | sed -rn 's/^Version: ((\d+):)?(.*)-.*/\3/p'`.orig.tar.gz
