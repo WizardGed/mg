@@ -2,7 +2,7 @@ Source: mg
 Section: editors
 Priority: optional
 Maintainer: Debian QA Group <packages@qa.debian.org>
-Build-Depends: debhelper (>= 9), libncurses-dev
+Build-Depends: debhelper (>= 9), libncurses-dev, libbsd-dev, pkg-config
 Standards-Version: 3.9.6
 Homepage: http://homepage.boetes.org/software/mg/
 Vcs-Git: git://anonscm.debian.org/collab-maint/mg.git
