@@ -1,4 +1,4 @@
-/*	$OpenBSD: macro.c,v 1.13 2008/06/10 02:39:22 kjell Exp $	*/
+/*	$OpenBSD: macro.c,v 1.15 2014/03/20 07:47:29 lum Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -6,7 +6,6 @@
  *	Keyboard macros.
  */
 
-#ifndef NO_MACRO
 #include "def.h"
 #include "key.h"
 #include "macro.h"
@@ -72,6 +71,7 @@ executemacro(int f, int n)
 	if (macrodef ||
 	    (macrocount >= MAXMACRO && macro[MAXMACRO - 1].m_funct
 	    != finishmacro)) {
+		dobeep();
 		ewprintf("Macro too long. Aborting.");
 		return (FALSE);
 	}
@@ -105,4 +105,3 @@ executemacro(int f, int n)
 	inmacro = FALSE;
 	return (TRUE);
 }
-#endif	/* NO_MACRO */

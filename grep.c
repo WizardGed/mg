@@ -1,4 +1,4 @@
-/*	$OpenBSD: grep.c,v 1.38 2009/06/04 23:39:37 kjell Exp $	*/
+/*	$OpenBSD: grep.c,v 1.42 2014/11/16 04:16:41 guenther Exp $	*/
 
 /* This file is in the public domain */
 
@@ -8,9 +8,8 @@
 
 #include <sys/types.h>
 #include <ctype.h>
-
-#include "libgen.h"
-
+#include <libgen.h>
+#include <limits.h>
 #include <time.h>
 
 int	 globalwd = FALSE;
@@ -19,7 +18,6 @@ int		 next_error(int, int);
 static int	 grep(int, int);
 static int	 gid(int, int);
 static struct buffer	*compile_mode(const char *, const char *);
-static int	 xlint(int, int);
 void grep_init(void);
 
 static char compile_last_command[NFILEN] = "make ";
@@ -51,7 +49,6 @@ grep_init(void)
 	funmap_add(compile_goto_error, "compile-goto-error");
 	funmap_add(next_error, "next-error");
 	funmap_add(grep, "grep");
-	funmap_add(xlint, "lint");
 	funmap_add(compile, "compile");
 	funmap_add(gid, "gid");
 	maps_add((KEYMAP *)&compilemap, "compile");
@@ -75,30 +72,6 @@ grep(int f, int n)
 		return (FALSE);
 
 	if ((bp = compile_mode("*grep*", cprompt)) == NULL)
-		return (FALSE);
-	if ((wp = popbuf(bp, WNONE)) == NULL)
-		return (FALSE);
-	curbp = bp;
-	compile_win = curwp = wp;
-	return (TRUE);
-}
-
-/* ARGSUSED */
-static int
-xlint(int f, int n)
-{
-	char	 cprompt[NFILEN], *bufp;
-	struct buffer	*bp;
-	struct mgwin	*wp;
-
-	(void)strlcpy(cprompt, "make lint ", sizeof(cprompt));
-	if ((bufp = eread("Run lint: ", cprompt, NFILEN,
-	    EFDEF | EFNEW | EFCR)) == NULL)
-		return (ABORT);
-	else if (bufp[0] == '\0')
-		return (FALSE);
-
-	if ((bp = compile_mode("*lint*", cprompt)) == NULL)
 		return (FALSE);
 	if ((wp = popbuf(bp, WNONE)) == NULL)
 		return (FALSE);
@@ -141,7 +114,8 @@ static int
 gid(int f, int n)
 {
 	char	 command[NFILEN];
-	char	 cprompt[NFILEN], c, *bufp;
+	char	 cprompt[NFILEN], *bufp;
+	int	c;
 	struct buffer	*bp;
 	struct mgwin	*wp;
 	int	 i, j, len;
@@ -221,10 +195,12 @@ compile_mode(const char *name, const char *command)
 	if (getcwd(cwd, sizeof(cwd)) == NULL)
 		panic("Can't get current directory!");
 	if (chdir(bp->b_cwd) == -1) {
+		dobeep();
 		ewprintf("Can't change dir to %s", bp->b_cwd);
 		return (NULL);
 	}
 	if ((fpipe = popen(qcmd, "r")) == NULL) {
+		dobeep();
 		ewprintf("Problem opening pipe");
 		return (NULL);
 	}
@@ -255,6 +231,7 @@ compile_mode(const char *name, const char *command)
 	compile_buffer = bp;
 
 	if (chdir(cwd) == -1) {
+		dobeep();
 		ewprintf("Can't change dir back to %s", cwd);
 		return (NULL);
 	}
@@ -324,6 +301,7 @@ fail:
 		curwp->w_rflag |= WFMOVE;
 		goto retry;
 	}
+	dobeep();
 	ewprintf("No more hits");
 	return (FALSE);
 }
@@ -333,12 +311,14 @@ int
 next_error(int f, int n)
 {
 	if (compile_win == NULL || compile_buffer == NULL) {
+		dobeep();
 		ewprintf("No compilation active");
 		return (FALSE);
 	}
 	curwp = compile_win;
 	curbp = compile_buffer;
 	if (curwp->w_dotp == blastlp(curbp)) {
+		dobeep();
 		ewprintf("No more hits");
 		return (FALSE);
 	}

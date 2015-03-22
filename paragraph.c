@@ -1,4 +1,4 @@
-/*	$OpenBSD: paragraph.c,v 1.19 2009/06/04 02:23:37 kjell Exp $	*/
+/*	$OpenBSD: paragraph.c,v 1.35 2014/11/16 04:16:41 guenther Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -7,6 +7,9 @@
  * and GNU-ified by mwm@ucbvax.	 Several bug fixes by blarson@usc-oberon.
  */
 
+#include <ctype.h>
+#include <limits.h>
+
 #include "def.h"
 
 static int	fillcol = 70;
@@ -14,52 +17,41 @@ static int	fillcol = 70;
 #define MAXWORD 256
 
 /*
- * Move to start of paragraph.  Go back to the beginning of the current
- * paragraph here we look for a <NL><NL> or <NL><TAB> or <NL><SPACE>
- * combination to delimit the beginning of a paragraph.
+ * Move to start of paragraph.
+ * Move backwards by line, checking from the 1st character forwards for the
+ * existence a non-space. If a non-space character is found, move to the 
+ * preceding line. Keep doing this until a line with only spaces is found or
+ * the start of buffer.
  */
 /* ARGSUSED */
 int
 gotobop(int f, int n)
 {
+	int col, nospace;
+
 	/* the other way... */
 	if (n < 0)
 		return (gotoeop(f, -n));
 
 	while (n-- > 0) {
-		/* first scan back until we are in a word */
-		while (backchar(FFRAND, 1) && inword() == 0);
+		nospace = 0;
+		while (lback(curwp->w_dotp) != curbp->b_headp) {
+			curwp->w_doto = 0;
+			col = 0;
 
-		/* and go to the B-O-Line */
-		curwp->w_doto = 0;
+			while (col < llength(curwp->w_dotp) &&
+			    (isspace(lgetc(curwp->w_dotp, col))))
+				col++;
 
-		/*
-		 * and scan back until we hit a <NL><SP> <NL><TAB> or
-		 * <NL><NL>
-		 */
-		while (lback(curwp->w_dotp) != curbp->b_headp)
-			if (llength(lback(curwp->w_dotp)) &&
-			    lgetc(curwp->w_dotp, 0) != ' ' &&
-			    lgetc(curwp->w_dotp, 0) != '.' &&
-			    lgetc(curwp->w_dotp, 0) != '\t')
-				curwp->w_dotp = lback(curwp->w_dotp);
-			else {
-				if (llength(lback(curwp->w_dotp)) &&
-				    lgetc(curwp->w_dotp, 0) == '.') {
-					curwp->w_dotp = lforw(curwp->w_dotp);
-					if (curwp->w_dotp == curbp->b_headp) {
-						/*
-						 * beyond end of buffer,
-						 * cleanup time
-						 */
-						curwp->w_dotp =
-						    lback(curwp->w_dotp);
-						curwp->w_doto =
-						    llength(curwp->w_dotp);
-					}
-				}
-				break;
-			}
+			if (col >= llength(curwp->w_dotp)) {
+				if (nospace)
+					break;
+			} else
+				nospace = 1;
+
+			curwp->w_dotline--;
+			curwp->w_dotp = lback(curwp->w_dotp);
+		}
 	}
 	/* force screen update */
 	curwp->w_rflag |= WFMOVE;
@@ -67,44 +59,48 @@ gotobop(int f, int n)
 }
 
 /*
- * Move to end of paragraph.  Go forward to the end of the current paragraph
- * here we look for a <NL><NL> or <NL><TAB> or <NL><SPACE> combination to
- * delimit the beginning of a paragraph.
+ * Move to end of paragraph.
+ * See comments for gotobop(). Same, but moving forwards.
  */
 /* ARGSUSED */
 int
 gotoeop(int f, int n)
 {
+	int col, nospace;
+
 	/* the other way... */
 	if (n < 0)
 		return (gotobop(f, -n));
 
 	/* for each one asked for */
 	while (n-- > 0) {
-		/* Find the first word on/after the current line */
-		curwp->w_doto = 0;
-		while (forwchar(FFRAND, 1) && inword() == 0);
+		nospace = 0;
+		while (lforw(curwp->w_dotp) != curbp->b_headp) {
+			col = 0;
+			curwp->w_doto = 0;
 
-		curwp->w_doto = 0;
-		curwp->w_dotp = lforw(curwp->w_dotp);
+			while (col < llength(curwp->w_dotp) &&
+			    (isspace(lgetc(curwp->w_dotp, col))))
+				col++;
 
-		/* and scan forword until we hit a <NL><SP> or ... */
-		while (curwp->w_dotp != curbp->b_headp) {
-			if (llength(curwp->w_dotp) &&
-			    lgetc(curwp->w_dotp, 0) != ' ' &&
-			    lgetc(curwp->w_dotp, 0) != '.' &&
-			    lgetc(curwp->w_dotp, 0) != '\t')
-				curwp->w_dotp = lforw(curwp->w_dotp);
-			else
-				break;
-		}
-		if (curwp->w_dotp == curbp->b_headp) {
-			/* beyond end of buffer, cleanup time */
-			curwp->w_dotp = lback(curwp->w_dotp);
-			curwp->w_doto = llength(curwp->w_dotp);
-			break;
+			if (col >= llength(curwp->w_dotp)) {
+				if (nospace)
+					break;
+			} else
+				nospace = 1;
+
+			curwp->w_dotp = lforw(curwp->w_dotp);
+			curwp->w_dotline++;
+
+			/* do not continue after end of buffer */
+			if (lforw(curwp->w_dotp) == curbp->b_headp) {
+				gotoeol(FFRAND, 1);
+				curwp->w_rflag |= WFMOVE;
+				return (FALSE);
+			}
 		}
 	}
+
 	/* force screen update */
 	curwp->w_rflag |= WFMOVE;
 	return (TRUE);
@@ -175,8 +171,8 @@ fillpara(int f, int n)
 				wbuf[wordlen++] = c;
 			else {
 				/*
-				 * You loose chars beyond MAXWORD if the word
-				 * is to long. I'm to lazy to fix it now; it
+				 * You lose chars beyond MAXWORD if the word
+				 * is too long. I'm too lazy to fix it now; it
 				 * just silently truncated the word before,
 				 * so I get to feel smug.
 				 */
@@ -190,11 +186,15 @@ fillpara(int f, int n)
 			/*
 			 * if at end of line or at doublespace and previous
 			 * character was one of '.','?','!' doublespace here.
+			 * behave the same way if a ')' is preceded by a
+			 * [.?!] and followed by a doublespace.
 			 */
 			if ((eolflag ||
 			    curwp->w_doto == llength(curwp->w_dotp) ||
 			    (c = lgetc(curwp->w_dotp, curwp->w_doto)) == ' '
-			    || c == '\t') && ISEOSP(wbuf[wordlen - 1]) &&
+			    || c == '\t') && (ISEOSP(wbuf[wordlen - 1]) ||
+			    (wbuf[wordlen - 1] == ')' && wordlen >= 2 &&
+			    ISEOSP(wbuf[wordlen - 2]))) &&
 			    wordlen < MAXWORD - 1)
 				wbuf[wordlen++] = ' ';
 
@@ -247,13 +247,14 @@ cleanup:
 int
 killpara(int f, int n)
 {
-	int	status;		/* returned status of functions */
+	int	status, end = FALSE;	/* returned status of functions */
 
 	/* for each paragraph to delete */
 	while (n--) {
 
 		/* mark out the end and beginning of the para to delete */
-		(void)gotoeop(FFRAND, 1);
+		if (!gotoeop(FFRAND, 1))
+			end = TRUE;
 
 		/* set the mark here */
 		curwp->w_markp = curwp->w_dotp;
@@ -269,8 +270,8 @@ killpara(int f, int n)
 		if ((status = killregion(FFRAND, 1)) != TRUE)
 			return (status);
 
-		/* and clean up the 2 extra lines */
-		(void)ldelete((RSIZE) 1, KFORW);
+		if (end)
+			return (TRUE);
 	}
 	return (TRUE);
 }
@@ -348,6 +349,7 @@ setfillcol(int f, int n)
 			return (FALSE);
 		nfill = strtonum(rep, 0, INT_MAX, &es);
 		if (es != NULL) {
+			dobeep();
 			ewprintf("Invalid fill column: %s", rep);
 			return (FALSE);
 		}

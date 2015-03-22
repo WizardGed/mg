@@ -1,4 +1,4 @@
-/*	$OpenBSD: extend.c,v 1.51 2011/01/21 19:10:13 kjell Exp $	*/
+/*	$OpenBSD: extend.c,v 1.58 2014/12/06 23:20:17 krw Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -12,21 +12,16 @@
 
 #include <sys/types.h>
 #include <ctype.h>
+#include <limits.h>
 
-#ifndef NO_MACRO
 #include "macro.h"
-#endif /* !NO_MACRO */
 
 #ifdef	FKEYS
 #include "key.h"
-#ifndef	NO_STARTUP
 #ifndef	BINDKEY
 #define	BINDKEY			/* bindkey is used by FKEYS startup code */
 #endif /* !BINDKEY */
-#endif /* !NO_STARTUP */
 #endif /* FKEYS */
-
-#include <ctype.h>
 
 static int	 remap(KEYMAP *, int, PF, KEYMAP *);
 static KEYMAP	*reallocmap(KEYMAP *);
@@ -46,7 +41,6 @@ int
 insert(int f, int n)
 {
 	char	 buf[128], *bufp, *cp;
-#ifndef NO_MACRO
 	int	 count, c;
 
 	if (inmacro) {
@@ -63,7 +57,7 @@ insert(int f, int n)
 	if (n == 1)
 		/* CFINS means selfinsert can tack on the end */
 		thisflag |= CFINS;
-#endif /* !NO_MACRO */
+
 	if ((bufp = eread("Insert: ", buf, sizeof(buf), EFNEW)) == NULL)
 		return (ABORT);
 	else if (bufp[0] == '\0')
@@ -120,6 +114,7 @@ remap(KEYMAP *curmap, int c, PF funct, KEYMAP *pref_map)
 			ele--;
 			if ((pfp = calloc(c - ele->k_base + 1,
 			    sizeof(PF))) == NULL) {
+				dobeep();
 				ewprintf("Out of memory");
 				return (FALSE);
 			}
@@ -134,6 +129,7 @@ remap(KEYMAP *curmap, int c, PF funct, KEYMAP *pref_map)
 		} else if (n2 <= MAPELEDEF) {
 			if ((pfp = calloc(ele->k_num - c + 1,
 			    sizeof(PF))) == NULL) {
+				dobeep();
 				ewprintf("Out of memory");
 				return (FALSE);
 			}
@@ -152,6 +148,7 @@ remap(KEYMAP *curmap, int c, PF funct, KEYMAP *pref_map)
 				curmap = newmap;
 			}
 			if ((pfp = malloc(sizeof(PF))) == NULL) {
+				dobeep();
 				ewprintf("Out of memory");
 				return (FALSE);
 			}
@@ -175,6 +172,7 @@ remap(KEYMAP *curmap, int c, PF funct, KEYMAP *pref_map)
 			else {
 				if ((mp = malloc(sizeof(KEYMAP) +
 				    (MAPINIT - 1) * sizeof(struct map_element))) == NULL) {
+					dobeep();
 					ewprintf("Out of memory");
 					ele->k_funcp[c - ele->k_base] =
 					    curmap->map_default;
@@ -204,6 +202,7 @@ remap(KEYMAP *curmap, int c, PF funct, KEYMAP *pref_map)
 					if ((mp = malloc(sizeof(KEYMAP) +
 					    (MAPINIT - 1) *
 					    sizeof(struct map_element))) == NULL) {
+						dobeep();
 						ewprintf("Out of memory");
 						ele->k_funcp[c - ele->k_base] =
 						    curmap->map_default;
@@ -231,6 +230,7 @@ remap(KEYMAP *curmap, int c, PF funct, KEYMAP *pref_map)
 			}
 			if ((pfp = calloc(ele->k_num - c + !n2,
 			    sizeof(PF))) == NULL) {
+				dobeep();
 				ewprintf("Out of memory");
 				return (FALSE);
 			}
@@ -253,6 +253,7 @@ remap(KEYMAP *curmap, int c, PF funct, KEYMAP *pref_map)
 			if (pref_map == NULL) {
 				if ((mp = malloc(sizeof(KEYMAP) + (MAPINIT - 1)
 				    * sizeof(struct map_element))) == NULL) {
+					dobeep();
 					ewprintf("Out of memory");
 					ele->k_funcp[c - ele->k_base] =
 					    curmap->map_default;
@@ -281,11 +282,13 @@ reallocmap(KEYMAP *curmap)
 	int	 i;
 
 	if (curmap->map_max > SHRT_MAX - MAPGROW) {
+		dobeep();
 		ewprintf("keymap too large");
 		return (NULL);
 	}
 	if ((mp = malloc(sizeof(KEYMAP) + (curmap->map_max + (MAPGROW - 1)) *
 	    sizeof(struct map_element))) == NULL) {
+		dobeep();
 		ewprintf("Out of memory");
 		return (NULL);
 	}
@@ -338,16 +341,15 @@ dobind(KEYMAP *curmap, const char *p, int unbind)
 	char	 bprompt[80], *bufp, *pep;
 	int	 c, s, n;
 
-#ifndef NO_MACRO
 	if (macrodef) {
 		/*
 		 * Keystrokes aren't collected. Not hard, but pretty useless.
 		 * Would not work for function keys in any case.
 		 */
+		dobeep();
 		ewprintf("Can't rebind key in macro");
 		return (FALSE);
 	}
-#ifndef NO_STARTUP
 	if (inmacro) {
 		for (s = 0; s < maclcur->l_used - 1; s++) {
 			if (doscan(curmap, c = CHARMASK(maclcur->l_text[s]), &curmap)
@@ -360,8 +362,6 @@ dobind(KEYMAP *curmap, const char *p, int unbind)
 		(void)doscan(curmap, c = maclcur->l_text[s], NULL);
 		maclcur = maclcur->l_fp;
 	} else {
-#endif /* !NO_STARTUP */
-#endif /* !NO_MACRO */
 		n = strlcpy(bprompt, p, sizeof(bprompt));
 		if (n >= sizeof(bprompt))
 			n = sizeof(bprompt) - 1;
@@ -376,9 +376,7 @@ dobind(KEYMAP *curmap, const char *p, int unbind)
 			*pep++ = '-';
 			*pep = '\0';
 		}
-#ifndef NO_STARTUP
 	}
-#endif /* !NO_STARTUP */
 	if (unbind)
 		funct = rescan;
 	else {
@@ -389,6 +387,7 @@ dobind(KEYMAP *curmap, const char *p, int unbind)
 			return (FALSE);
 		if (((funct = name_function(bprompt)) == NULL) ?
 		    (pref_map = name_map(bprompt)) == NULL : funct == NULL) {
+			dobeep();
 			ewprintf("[No match]");
 			return (FALSE);
 		}
@@ -415,6 +414,7 @@ bindkey(KEYMAP **mapp, const char *fname, KCHAR *keys, int kcount)
 		funct = rescan;
 	else if (((funct = name_function(fname)) == NULL) ?
 	    (pref_map = name_map(fname)) == NULL : funct == NULL) {
+		dobeep();
 		ewprintf("[No match: %s]", fname);
 		return (FALSE);
 	}
@@ -445,7 +445,7 @@ dobindkey(KEYMAP *map, const char *func, const char *str)
 	for (i = 0; *str && i < MAXKEY; i++) {
 		/* XXX - convert numbers w/ strol()? */
 		if (*str == '^' && *(str + 1) !=  '\0') {
-			key.k_chars[i] = CCHR(toupper(*++str));
+			key.k_chars[i] = CCHR(toupper((unsigned char)*++str));
 		} else if (*str == '\\' && *(str + 1) != '\0') {
 			switch (*++str) {
 			case '^':
@@ -520,6 +520,7 @@ redefine_key(int f, int n)
 		return (FALSE);
 	(void)strlcat(buf, tmp, sizeof(buf));
 	if ((mp = name_map(tmp)) == NULL) {
+		dobeep();
 		ewprintf("Unknown map %s", tmp);
 		return (FALSE);
 	}
@@ -565,7 +566,6 @@ extend(int f, int n)
 	else if (bufp[0] == '\0')
 		return (FALSE);
 	if ((funct = name_function(bufp)) != NULL) {
-#ifndef NO_MACRO
 		if (macrodef) {
 			struct line	*lp = maclcur;
 			macro[macrocount - 1].m_funct = funct;
@@ -573,14 +573,13 @@ extend(int f, int n)
 			maclcur->l_fp = lp->l_fp;
 			free(lp);
 		}
-#endif /* !NO_MACRO */
 		return ((*funct)(f, n));
 	}
+	dobeep();
 	ewprintf("[No match]");
 	return (FALSE);
 }
 
-#ifndef NO_STARTUP
 /*
  * Define the commands needed to do startup-file processing.
  * This code is mostly a kludge just so we can get startup-file processing.
@@ -666,25 +665,28 @@ load(const char *fname)
 	int	 s = TRUE, line;
 	int	 nbytes = 0;
 	char	 excbuf[128];
+	FILE    *ffp;
 
 	if ((fname = adjustname(fname, TRUE)) == NULL)
 		/* just to be careful */
 		return (FALSE);
 
-	if (ffropen(fname, NULL) != FIOSUC)
+	if (ffropen(&ffp, fname, NULL) != FIOSUC)
 		return (FALSE);
 
 	line = 0;
-	while ((s = ffgetline(excbuf, sizeof(excbuf) - 1, &nbytes)) == FIOSUC) {
+	while ((s = ffgetline(ffp, excbuf, sizeof(excbuf) - 1, &nbytes))
+	    == FIOSUC) {
 		line++;
 		excbuf[nbytes] = '\0';
 		if (excline(excbuf) != TRUE) {
 			s = FIOERR;
+			dobeep();
 			ewprintf("Error loading file %s at line %d", fname, line);
 			break;
 		}
 	}
-	(void)ffclose(NULL);
+	(void)ffclose(ffp, NULL);
 	excbuf[nbytes] = '\0';
 	if (s != FIOEOF || (nbytes && excline(excbuf) != TRUE))
 		return (FALSE);
@@ -707,7 +709,7 @@ excline(char *line)
 	long	 nl;
 #ifdef	FKEYS
 	int	 bind;
-	KEYMAP	*curmap = NULL;
+	KEYMAP	*curmap;
 #define BINDARG		0  /* this arg is key to bind (local/global set key) */
 #define	BINDNO		1  /* not binding or non-quoted BINDARG */
 #define BINDNEXT	2  /* next arg " (define-key) */
@@ -720,6 +722,7 @@ excline(char *line)
 	lp = NULL;
 
 	if (macrodef || inmacro) {
+		dobeep();
 		ewprintf("Not now!");
 		return (FALSE);
 	}
@@ -747,6 +750,7 @@ excline(char *line)
 		n = (int)nl;
 	}
 	if ((fp = name_function(funcp)) == NULL) {
+		dobeep();
 		ewprintf("Unknown function: %s", funcp);
 		return (FALSE);
 	}
@@ -888,6 +892,7 @@ excline(char *line)
 		case BINDNEXT:
 			lp->l_text[lp->l_used] = '\0';
 			if ((curmap = name_map(lp->l_text)) == NULL) {
+				dobeep();
 				ewprintf("No such mode: %s", lp->l_text);
 				status = FALSE;
 				free(lp);
@@ -909,6 +914,7 @@ excline(char *line)
 #ifdef	FKEYS
 	switch (bind) {
 	default:
+		dobeep();
 		ewprintf("Bad args to set key");
 		status = FALSE;
 		break;
@@ -949,7 +955,7 @@ skipwhite(char *s)
 {
 	while (*s == ' ' || *s == '\t' || *s == ')' || *s == '(')
 		s++;
-	if (*s == ';')
+	if ((*s == ';') || (*s == '#'))
 		*s = '\0';
 	return (s);
 }
@@ -973,4 +979,3 @@ parsetoken(char *s)
 		} while (*++s != '"' && *s != '\0');
 	return (s);
 }
-#endif /* !NO_STARTUP */

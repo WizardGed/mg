@@ -1,4 +1,4 @@
-/*	$OpenBSD: ttyio.c,v 1.32 2008/02/05 12:53:38 reyk Exp $	*/
+/*	$OpenBSD: ttyio.c,v 1.35 2014/03/20 07:47:29 lum Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -15,6 +15,7 @@
 #include <sys/time.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
+#include <poll.h>
 #include <termios.h>
 #include <term.h>
 
@@ -58,6 +59,7 @@ int
 ttraw(void)
 {
 	if (tcgetattr(0, &oldtty) < 0) {
+		dobeep();
 		ewprintf("ttopen can't get terminal attributes");
 		return (FALSE);
 	}
@@ -80,6 +82,7 @@ ttraw(void)
 	newtty.c_cflag |= CS8;
 #endif
 	if (tcsetattr(0, TCSASOFT | TCSADRAIN, &newtty) < 0) {
+		dobeep();
 		ewprintf("ttopen can't tcsetattr");
 		return (FALSE);
 	}
@@ -113,6 +116,7 @@ ttcooked(void)
 {
 	ttflush();
 	if (tcsetattr(0, TCSASOFT | TCSADRAIN, &oldtty) < 0) {
+		dobeep();
 		ewprintf("ttclose can't tcsetattr");
 		return (FALSE);
 	}
@@ -173,7 +177,9 @@ ttgetc(void)
 				redraw(0, 0);
 				winch_flag = 0;
 			}
-		} else if (ret == 1)
+		} else if (ret == -1 && errno == EIO)
+			panic("lost stdin");
+		else if (ret == 1)
 			break;
 	} while (1);
 	return ((int) c) & 0xFF;
@@ -187,14 +193,7 @@ charswaiting(void)
 {
 	int	x;
 
-#ifdef FIONREAD
-
-	return ((ioctl(STDIN_FILENO, FIONREAD, &x) < 0) ? 0 : x);
-
-#else   /* For platforms that don't have FIONREAD */
-
-	return ((ioctl(STDIN_FILENO, TIOCINQ, &x) < 0) ? 0 : x);
-#endif
+	return ((ioctl(0, FIONREAD, &x) < 0) ? 0 : x);
 }
 
 /*
@@ -203,6 +202,12 @@ charswaiting(void)
 void
 panic(char *s)
 {
+	static int panicking = 0;
+
+	if (panicking)
+		return;
+	else
+		panicking = 1;
 	ttclose();
 	(void) fputs("panic: ", stderr);
 	(void) fputs(s, stderr);
@@ -217,16 +222,12 @@ panic(char *s)
 int
 ttwait(int msec)
 {
-	fd_set		readfds;
-	struct timeval	tmout;
+	struct pollfd	pfd[1];
 
-	FD_ZERO(&readfds);
-	FD_SET(0, &readfds);
+	pfd[0].fd = 0;
+	pfd[0].events = POLLIN;
 
-	tmout.tv_sec = msec/1000;
-	tmout.tv_usec = msec - tmout.tv_sec * 1000;
-
-	if ((select(1, &readfds, NULL, NULL, &tmout)) == 0)
+	if ((poll(pfd, 1, msec)) == 0)
 		return (TRUE);
 	return (FALSE);
 }
