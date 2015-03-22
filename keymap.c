@@ -1,4 +1,4 @@
-/*	$OpenBSD: keymap.c,v 1.45 2011/01/18 16:25:40 kjell Exp $	*/
+/*	$OpenBSD: keymap.c,v 1.52 2014/08/14 12:22:58 bcallah Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -14,7 +14,6 @@
  * initial keymap declarations, deepest first
  */
 
-#ifndef NO_HELP
 static PF cHcG[] = {
 	ctrlg,			/* ^G */
 	help_help		/* ^H */
@@ -39,19 +38,56 @@ struct KEYMAPE (2 + IMAPEXT) helpmap = {
 		}
 	}
 };
-#endif /* !NO_HELP */
 
-struct KEYMAPE (1 + IMAPEXT) ccmap = {
+static PF cCsc[] = {
+	cscallerfuncs,		/* c */
+	csdefinition,		/* d */
+	csegrep,		/* e */
+	csfindfile,		/* f */
+	rescan,			/* g */
+	rescan,			/* h */
+	csfindinc,		/* i */
+	rescan,			/* j */
+	rescan,			/* k */
+	rescan,			/* l */
+	rescan,			/* m */
+	csnextmatch,		/* n */
+	rescan,			/* o */
+	csprevmatch,		/* p */
+	rescan,			/* q */
+	rescan, 		/* r */	
+	cssymbol,		/* s */
+	csfindtext		/* t */
+};
+
+static struct KEYMAPE (1 + IMAPEXT) cCsmap = {
 	1,
 	1 + IMAPEXT,
 	rescan,
 	{
 		{
-			CCHR('@'), CCHR('@'), (PF[]){ rescan }, NULL
+			'c', 't', cCsc, NULL
 		}
 	}
 };
 
+static PF cCs[] = {
+	NULL			/* s */
+};
+
+struct KEYMAPE (2 + IMAPEXT) ccmap = {
+	2,
+	2 + IMAPEXT,
+	rescan,
+	{
+		{
+			CCHR('@'), CCHR('@'), (PF[]){ rescan }, NULL
+		},
+		{
+			's', 's', cCs, (KEYMAP *) & cCsmap
+		}
+	}
+};
 
 static PF cX4cF[] = {
 	poptofile,		/* ^f */
@@ -103,12 +139,10 @@ static PF cXcL[] = {
 	swapmark		/* ^X */
 };
 
-#ifndef NO_MACRO
 static PF cXlp[] = {
 	definemacro,		/* ( */
 	finishmacro		/* ) */
 };
-#endif /* !NO_MACRO */
 
 static PF cX0[] = {
 	delwind,		/* 0 */
@@ -130,14 +164,10 @@ static PF cXcar[] = {
 	usebuffer,		/* b */
 	rescan,			/* c */
 	rescan,			/* d */
-#ifndef NO_MACRO
 	executemacro,		/* e */
-#else /* !NO_MACRO */
-	rescan,			/* e */
-#endif /* !NO_MACRO */
 	setfillcol,		/* f */
 	gotoline,		/* g */
-	rescan,			/* h */
+	markbuffer,		/* h */
 	fileinsert,		/* i */
 	rescan,			/* j */
 	killbuffer_cmd,		/* k */
@@ -153,15 +183,9 @@ static PF cXcar[] = {
 	undo			/* u */
 };
 
-#ifndef NO_MACRO
 struct KEYMAPE (6 + IMAPEXT) cXmap = {
 	6,
 	6 + IMAPEXT,
-#else /* !NO_MACRO */
-static struct KEYMAPE (5 + IMAPEXT) cXmap = {
-	5,
-	5 + IMAPEXT,
-#endif /* !NO_MACRO */
 	rescan,
 	{
 		{
@@ -170,11 +194,9 @@ static struct KEYMAPE (5 + IMAPEXT) cXmap = {
 		{
 			CCHR('L'), CCHR('X'), cXcL, NULL
 		},
-#ifndef NO_MACRO
 		{
 			'(', ')', cXlp, NULL
 		},
-#endif /* !NO_MACRO */
 		{
 			'0', '4', cX0, (KEYMAP *) & cX4map
 		},
@@ -195,8 +217,9 @@ static PF metacV[] = {
 	pagenext		/* ^V */
 };
 
-static PF metasp[] = {
-	justone			/* space */
+static PF metaspex[] = {
+	justone,		/* space */
+	shellcommand		/* ! */
 };
 
 static PF metapct[] = {
@@ -204,8 +227,11 @@ static PF metapct[] = {
 };
 
 static PF metami[] = {
+	poptag,                 /* * */
+	rescan,                 /* + */
+	rescan,                 /* , */
 	negative_argument,	/* - */
-	rescan,			/* . */
+	findtag,		/* . */
 	rescan,			/* / */
 	digit_argument,		/* 0 */
 	digit_argument,		/* 1 */
@@ -256,7 +282,7 @@ static PF metal[] = {
 	rescan,			/* y */
 	rescan,			/* z */
 	gotobop,		/* { */
-	rescan,			/* | */
+	piperegion,		/* | */
 	gotoeop			/* } */
 };
 
@@ -292,13 +318,13 @@ struct KEYMAPE (8 + IMAPEXT) metamap = {
 			CCHR('V'), CCHR('V'), metacV, NULL
 		},
 		{
-			' ', ' ', metasp, NULL
+			' ', '!', metaspex, NULL
 		},
 		{
 			'%', '%', metapct, NULL
 		},
 		{
-			'-', '>', metami, NULL
+			'*', '>', metami, NULL
 		},
 		{
 			'[', 'f', metasqf, (KEYMAP *) &metasqlmap
@@ -324,11 +350,7 @@ static PF fund_at[] = {
 };
 
 static PF fund_h[] = {
-#ifndef NO_HELP
 	NULL,			/* ^H */
-#else /* !NO_HELP */
-	rescan,			/* ^H */
-#endif /* !NO_HELP */
 };
 
 
@@ -366,30 +388,24 @@ static PF fund_del[] = {
 };
 
 static PF fund_cb[] = {
-	showmatch		/* )  */
+	showmatch		/* ) ] }  */
 };
 
 #ifndef	FUND_XMAPS
 #define NFUND_XMAPS	0	/* extra map sections after normal ones */
 #endif
 
-static struct KEYMAPE (6 + NFUND_XMAPS + IMAPEXT) fundmap = {
-	6 + NFUND_XMAPS,
-	6 + NFUND_XMAPS + IMAPEXT,
+static struct KEYMAPE (8 + NFUND_XMAPS + IMAPEXT) fundmap = {
+	8 + NFUND_XMAPS,
+	8 + NFUND_XMAPS + IMAPEXT,
 	selfinsert,
 	{
 		{
 			CCHR('@'), CCHR('G'), fund_at, (KEYMAP *) & ccmap
 		},
-#ifndef NO_HELP
 		{
 			CCHR('H'), CCHR('H'), fund_h, (KEYMAP *) & helpmap
 		},
-#else /* !NO_HELP */
-		{
-			CCHR('@'), CCHR('H'), fund_h, NULL
-		},
-#endif /* !NO_HELP */
 		{
 			CCHR('J'), CCHR('Z'), fund_CJ, (KEYMAP *) & cXmap
 		},
@@ -398,6 +414,12 @@ static struct KEYMAPE (6 + NFUND_XMAPS + IMAPEXT) fundmap = {
 		},
 		{
 			')', ')', fund_cb, NULL
+		},
+		{
+			']', ']', fund_cb, NULL
+		},
+		{
+			'}', '}', fund_cb, NULL
 		},
 		{
 			CCHR('?'), CCHR('?'), fund_del, NULL
@@ -493,9 +515,7 @@ static struct maps_s map_table[] = {
 	{(KEYMAP *) &metamap, "esc prefix",},
 	{(KEYMAP *) &cXmap, "c-x prefix",},
 	{(KEYMAP *) &cX4map, "c-x 4 prefix",},
-#ifndef NO_HELP
 	{(KEYMAP *) &helpmap, "help",},
-#endif
 	{NULL, NULL}
 };
 
