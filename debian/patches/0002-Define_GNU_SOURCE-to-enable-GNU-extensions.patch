@@ -1,0 +1,43 @@
+From: Tomasz Buchert <tomasz@debian.org>
+Date: Tue, 24 Mar 2015 16:13:43 +0100
+Subject: Define_GNU_SOURCE to enable GNU extensions.
+
+The upstream def.h enables _GNU_SOURCE macro, but alas after necessary
+includes in the source code. We define _GNU_SOURCE in GNUmakefile and
+remove definition in def.h since they both conflict.
+---
+ GNUmakefile | 1 +
+ def.h       | 8 --------
+ 2 files changed, 1 insertion(+), 8 deletions(-)
+
+diff --git a/GNUmakefile b/GNUmakefile
+index f670deb..5eca336 100644
+--- a/GNUmakefile
++++ b/GNUmakefile
+@@ -33,6 +33,7 @@ CFLAGS?=	-O2 -pipe
+ CFLAGS+=	-g -Wall
+ CPPFLAGS+=	-DFKEYS -DREGEX -DXKEYS
+ CPPFLAGS+=	$(BSD_CPPFLAGS) -D__dead=__dead2
++CPPFLAGS+=	-D_GNU_SOURCE
+ LIBS=		$(CURSES_LIBS) $(BSD_LIBS)
+ 
+ 
+diff --git a/def.h b/def.h
+index 345377e..0073960 100644
+--- a/def.h
++++ b/def.h
+@@ -13,14 +13,6 @@
+ #include        "chrdef.h"
+ #include        "ttydef.h"
+ 
+-
+-/* necesarry to get asprintf & friends with glibc XXX doesn't work for some
+- * mysterious reason! */
+-#ifdef __GLIBC__
+-#  define _GNU_SOURCE
+-#  define __USE_GNU
+-#endif
+-
+ #if defined(__APPLE__) || defined(__FreeBSD__)
+ #  define LOGIN_NAME_MAX _POSIX_LOGIN_NAME_MAX
+ #endif
