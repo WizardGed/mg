@@ -1,4 +1,4 @@
-/*	$OpenBSD: tags.c,v 1.10 2014/11/16 00:59:25 guenther Exp $	*/
+/*	$OpenBSD: tags.c,v 1.11 2015/03/19 21:22:15 bcallah Exp $	*/
 
 /*
  * This file is in the public domain.
@@ -10,14 +10,15 @@
 #include <sys/stat.h>
 #include <sys/tree.h>
 #include <sys/types.h>
-
 #include <ctype.h>
 #include <err.h>
+#include <errno.h>
+#include <signal.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
-
-#if defined(LIBBSD_OVERLAY) || defined(__FreeBSD__)
+#include <unistd.h>
+#if defined(LIBBSD_OVERLAY) || defined(__FreeBSD__) || defined(__GLIBC__)
 #  include <libutil.h>
 #else
 #include <util.h>

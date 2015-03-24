@@ -1,4 +1,4 @@
-/*	$OpenBSD: yank.c,v 1.11 2014/03/20 07:47:29 lum Exp $	*/
+/*	$OpenBSD: yank.c,v 1.13 2015/03/19 21:22:15 bcallah Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -6,13 +6,15 @@
  *	kill ring functions
  */
 
-#include "def.h"
-
+#include <sys/queue.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-#ifndef KBLOCK
-#define KBLOCK	256		/* Kill buffer block size.	 */
-#endif
+#include "def.h"
+
+#define KBLOCK	 8192		/* Kill grow.                    */
 
 static char	*kbufp = NULL;	/* Kill buffer data.		 */
 static RSIZE	 kused = 0;	/* # of bytes used in KB.	 */
@@ -239,7 +241,7 @@ yank(int f, int n)
 		i = 0;
 		while ((c = kremove(i)) >= 0) {
 			if (c == '\n') {
-				if (newline(FFRAND, 1) == FALSE)
+				if (enewline(FFRAND, 1) == FALSE)
 					return (FALSE);
 				++nline;
 			} else {

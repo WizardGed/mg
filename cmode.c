@@ -1,4 +1,4 @@
-/* $OpenBSD: cmode.c,v 1.12 2015/01/13 17:02:28 bcallah Exp $ */
+/* $OpenBSD: cmode.c,v 1.15 2015/03/19 21:48:05 bcallah Exp $ */
 /*
  * This file is in the public domain.
  *
@@ -9,11 +9,15 @@
  * Implement an non-irritating KNF-compliant mode for editing
  * C code.
  */
+
+#include <sys/queue.h>
 #include <ctype.h>
+#include <signal.h>
+#include <stdio.h>
 
 #include "def.h"
-#include "kbd.h"
 #include "funmap.h"
+#include "kbd.h"
 
 /* Pull in from modes.c */
 extern int changemode(int, int, char *);
@@ -62,18 +66,18 @@ static PF cmode_spec[] = {
 	cc_char,	/* : */
 };
 
-static struct KEYMAPE (1 + IMAPEXT) cmode_cmap = {
+static struct KEYMAPE (1) cmode_cmap = {
 	1,
-	1 + IMAPEXT,
+	1,
 	rescan,
 	{
 		{ 'P', 'P', cmode_cCP, NULL }
 	}
 };
 
-static struct KEYMAPE (3 + IMAPEXT) cmodemap = {
+static struct KEYMAPE (3) cmodemap = {
 	3,
-	3 + IMAPEXT,
+	3,
 	rescan,
 	{
 		{ CCHR('C'), CCHR('M'), cmode_cc, (KEYMAP *) &cmode_cmap },
@@ -201,7 +205,7 @@ cc_lfindent(int f, int n)
 {
 	if (n < 0)
 		return (FALSE);
-	if (newline(FFRAND, 1) == FALSE)
+	if (enewline(FFRAND, 1) == FALSE)
 		return (FALSE);
 	return (cc_indent(FFRAND, n));
 }
