@@ -1,3 +1,10 @@
+mg (20150323-1) UNRELEASED; urgency=medium
+
+  * d/control: Set maintainer & uploader fields
+  * Imported Upstream version 20150323
+
+ -- Tomasz Buchert <tomasz@debian.org>  Tue, 24 Mar 2015 16:05:28 +0100
+
 mg (20150316-1) unstable; urgency=medium
 
   * Imported Upstream version 20150316
