@@ -1,4 +1,4 @@
-/*	$OpenBSD: theo.c,v 1.143 2014/11/19 21:22:47 schwarze Exp $	*/
+/*	$OpenBSD: theo.c,v 1.146 2015/03/19 21:48:05 bcallah Exp $	*/
 /*
  * Copyright (c) 2002 Artur Grabowski <art@openbsd.org>
  * All rights reserved.
@@ -24,10 +24,15 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/time.h>
+#include <sys/queue.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "def.h"
-#include "kbd.h"
 #include "funmap.h"
+#include "kbd.h"
 
 void		theo_init(void);
 static int	theo_analyze(int, int);
@@ -37,9 +42,9 @@ static PF theo_pf[] = {
 	theo_analyze
 };
 
-static struct KEYMAPE (1 + IMAPEXT) theomap = {
+static struct KEYMAPE (1) theomap = {
 	1,
-	1 + IMAPEXT,
+	1,
 	rescan,
 	{
 		{ CCHR('M'), CCHR('M'), theo_pf, NULL }
@@ -198,20 +203,16 @@ theo_analyze(int f, int n)
 {
 	const char	*str;
 	int		 len;
-	uint             random;
-	struct timeval   tv[2];
 
-	gettimeofday(&tv[0], NULL);
-	random = (uint)tv[0].tv_usec;
-	str = talk[random % ntalk];
+	str = talk[arc4random_uniform(ntalk)];
 	len = strlen(str);
 
-	newline(FFRAND, 2);
+	enewline(FFRAND, 2);
 
 	while (len--)
 		linsert(1, *str++);
 
-	newline(FFRAND, 2);
+	enewline(FFRAND, 2);
 
 	return (TRUE);
 }

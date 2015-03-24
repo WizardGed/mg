@@ -1,4 +1,4 @@
-/*	$OpenBSD: tty.c,v 1.32 2014/11/16 00:50:00 guenther Exp $	*/
+/*	$OpenBSD: tty.c,v 1.35 2015/03/19 21:48:05 bcallah Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -27,13 +27,15 @@
  * rather than the assumption that scrolling region operations look better.
  */
 
-#include "def.h"
-
+#include <sys/ioctl.h>
+#include <sys/queue.h>
 #include <sys/types.h>
 #include <sys/time.h>
-#include <sys/ioctl.h>
-
+#include <signal.h>
+#include <stdio.h>
 #include <term.h>
+
+#include "def.h"
 
 static int	 charcost(const char *);
 
@@ -152,9 +154,7 @@ ttreinit(void)
 void
 tttidy(void)
 {
-#ifdef	XKEYS
 	ttykeymaptidy();
-#endif /* XKEYS */
 
 	/* set the term back to normal mode */
 	if (exit_ca_mode)
@@ -408,14 +408,12 @@ ttresize(void)
 {
 	int newrow = 0, newcol = 0;
 
-#ifdef	TIOCGWINSZ
 	struct	winsize winsize;
 
 	if (ioctl(0, TIOCGWINSZ, &winsize) == 0) {
 		newrow = winsize.ws_row;
 		newcol = winsize.ws_col;
 	}
-#endif
 	if ((newrow <= 0 || newcol <= 0) &&
 	    ((newrow = lines) <= 0 || (newcol = columns) <= 0)) {
 		newrow = 24;

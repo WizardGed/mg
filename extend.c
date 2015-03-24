@@ -1,27 +1,30 @@
-/*	$OpenBSD: extend.c,v 1.58 2014/12/06 23:20:17 krw Exp $	*/
+/*	$OpenBSD: extend.c,v 1.60 2015/03/19 21:22:15 bcallah Exp $	*/
 
 /* This file is in the public domain. */
 
 /*
  *	Extended (M-X) commands, rebinding, and	startup file processing.
  */
-#include "chrdef.h"
-#include "def.h"
-#include "kbd.h"
-#include "funmap.h"
 
+#include <sys/queue.h>
 #include <sys/types.h>
 #include <ctype.h>
 #include <limits.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
+#include "chrdef.h"
+#include "def.h"
+#include "funmap.h"
+#include "kbd.h"
+#include "key.h"
 #include "macro.h"
 
-#ifdef	FKEYS
-#include "key.h"
 #ifndef	BINDKEY
 #define	BINDKEY			/* bindkey is used by FKEYS startup code */
 #endif /* !BINDKEY */
-#endif /* FKEYS */
 
 static int	 remap(KEYMAP *, int, PF, KEYMAP *);
 static KEYMAP	*reallocmap(KEYMAP *);
@@ -433,7 +436,6 @@ bindkey(KEYMAP **mapp, const char *fname, KCHAR *keys, int kcount)
 	return (remap(curmap, c, funct, pref_map));
 }
 
-#ifdef FKEYS
 /*
  * Wrapper for bindkey() that converts escapes.
  */
@@ -478,7 +480,6 @@ dobindkey(KEYMAP *map, const char *func, const char *str)
 	key.k_count = i;
 	return (bindkey(&map, func, key.k_chars, key.k_count));
 }
-#endif /* FKEYS */
 #endif /* BINDKEY */
 
 /*
@@ -694,9 +695,7 @@ load(const char *fname)
 }
 
 /*
- * excline - run a line from a load file or eval-expression.  If FKEYS is
- * defined, duplicate functionality of dobind so function key values don't
- * have to fit in type char.
+ * excline - run a line from a load file or eval-expression.
  */
 int
 excline(char *line)
@@ -707,7 +706,6 @@ excline(char *line)
 	char	*funcp, *tmp;
 	char	*argp = NULL;
 	long	 nl;
-#ifdef	FKEYS
 	int	 bind;
 	KEYMAP	*curmap;
 #define BINDARG		0  /* this arg is key to bind (local/global set key) */
@@ -715,9 +713,6 @@ excline(char *line)
 #define BINDNEXT	2  /* next arg " (define-key) */
 #define BINDDO		3  /* already found key to bind */
 #define BINDEXT		1  /* space for trailing \0 */
-#else /* FKEYS */
-#define BINDEXT		0
-#endif /* FKEYS */
 
 	lp = NULL;
 
@@ -754,7 +749,6 @@ excline(char *line)
 		ewprintf("Unknown function: %s", funcp);
 		return (FALSE);
 	}
-#ifdef	FKEYS
 	if (fp == bindtokey || fp == unbindtokey) {
 		bind = BINDARG;
 		curmap = fundamental_map;
@@ -765,7 +759,6 @@ excline(char *line)
 		bind = BINDNEXT;
 	else
 		bind = BINDNO;
-#endif /* FKEYS */
 	/* Pack away all the args now... */
 	if ((np = lalloc(0)) == FALSE)
 		return (FALSE);
@@ -784,28 +777,22 @@ excline(char *line)
 				goto cleanup;
 			}
 			bcopy(argp, ltext(lp), (int)(line - argp));
-#ifdef	FKEYS
 			/* don't count BINDEXT */
 			lp->l_used--;
 			if (bind == BINDARG)
 				bind = BINDNO;
-#endif /* FKEYS */
 		} else {
 			/* quoted strings are special */
 			++argp;
-#ifdef	FKEYS
 			if (bind != BINDARG) {
-#endif /* FKEYS */
 				lp = lalloc((int)(line - argp) + BINDEXT);
 				if (lp == NULL) {
 					status = FALSE;
 					goto cleanup;
 				}
 				lp->l_used = 0;
-#ifdef	FKEYS
 			} else
 				key.k_count = 0;
-#endif /* FKEYS */
 			while (*argp != '"' && *argp != '\0') {
 				if (*argp != '\\')
 					c = *argp++;
@@ -857,7 +844,6 @@ excline(char *line)
 							}
 						}
 						break;
-#ifdef	FKEYS
 					case 'f':
 					case 'F':
 						c = *++argp - '0';
@@ -867,24 +853,20 @@ excline(char *line)
 						}
 						c += KFIRST;
 						break;
-#endif /* FKEYS */
 					default:
 						c = CHARMASK(*argp);
 						break;
 					}
 					argp++;
 				}
-#ifdef	FKEYS
 				if (bind == BINDARG)
 					key.k_chars[key.k_count++] = c;
 				else
-#endif /* FKEYS */
 					lp->l_text[lp->l_used++] = c;
 			}
 			if (*line)
 				line++;
 		}
-#ifdef	FKEYS
 		switch (bind) {
 		case BINDARG:
 			bind = BINDDO;
@@ -902,16 +884,12 @@ excline(char *line)
 			bind = BINDARG;
 			break;
 		default:
-#endif /* FKEYS */
 			lp->l_fp = np->l_fp;
 			lp->l_bp = np;
 			np->l_fp = lp;
 			np = lp;
-#ifdef	FKEYS
 		}
-#endif /* FKEYS */
 	}
-#ifdef	FKEYS
 	switch (bind) {
 	default:
 		dobeep();
@@ -928,14 +906,11 @@ excline(char *line)
 			    key.k_count);
 		break;
 	case BINDNO:
-#endif /* FKEYS */
 		inmacro = TRUE;
 		maclcur = maclcur->l_fp;
 		status = (*fp)(f, n);
 		inmacro = FALSE;
-#ifdef	FKEYS
 	}
-#endif /* FKEYS */
 cleanup:
 	lp = maclcur->l_fp;
 	while (lp != maclcur) {
