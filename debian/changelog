@@ -1,10 +1,14 @@
-mg (20150323-1) unstable; urgency=medium
+mg (20150323-1) experimental; urgency=medium
 
-  * New maintainer (Closes: #734331)
+  [ Tomasz Buchert ]
   * Imported Upstream version 20150323
   * d/*: refresh packaging files
 
- -- Tomasz Buchert <tomasz@debian.org>  Tue, 24 Mar 2015 16:05:28 +0100
+  [ Harald Dunkel ]
+  * New maintainer (Closes: #734331)
+  * d/patches/*: refresh patches
+
+ -- Tomasz Buchert <tomasz@debian.org>  Wed, 25 Mar 2015 23:28:52 +0100
 
 mg (20110905-2) unstable; urgency=medium
 
