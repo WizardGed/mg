@@ -1,18 +1,10 @@
-mg (20150323-1) UNRELEASED; urgency=medium
+mg (20150323-1) unstable; urgency=medium
 
-  * d/control: Set maintainer & uploader fields
+  * New maintainer (Closes: #734331)
   * Imported Upstream version 20150323
+  * d/*: refresh packaging files
 
  -- Tomasz Buchert <tomasz@debian.org>  Tue, 24 Mar 2015 16:05:28 +0100
-
-mg (20150316-1) unstable; urgency=medium
-
-  * Imported Upstream version 20150316
-  * d/patches: drop obsolete and reapply hardening patch
-  * d/copyright: update copyright information
-  * d/control: update build dependencies
-
- -- Tomasz Buchert <tomasz@debian.org>  Mon, 23 Mar 2015 13:43:56 +0100
 
 mg (20110905-2) unstable; urgency=medium
 
