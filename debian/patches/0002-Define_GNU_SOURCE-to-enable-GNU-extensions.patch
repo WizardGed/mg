@@ -1,4 +1,4 @@
-From: Tomasz Buchert <tomasz@debian.org>
+From: Harald Dunkel <harri@afaics.de>
 Date: Tue, 24 Mar 2015 16:13:43 +0100
 Subject: Define_GNU_SOURCE to enable GNU extensions.
 

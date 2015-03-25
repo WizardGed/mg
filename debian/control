@@ -1,7 +1,7 @@
 Source: mg
 Section: editors
 Priority: optional
-Maintainer: Harald Dunkel <harald.dunkel@t-online.de>
+Maintainer: Harald Dunkel <harri@afaics.de>
 Uploaders: Tomasz Buchert <tomasz@debian.org>
 Build-Depends: debhelper (>= 9), libncurses-dev, libbsd-dev, pkg-config
 Standards-Version: 3.9.6
