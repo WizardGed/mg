@@ -1,3 +1,9 @@
+mg (20150323-2) unstable; urgency=medium
+
+  * Upload to unstable
+
+ -- Tomasz Buchert <tomasz@debian.org>  Wed, 29 Apr 2015 11:07:53 +0200
+
 mg (20150323-1) experimental; urgency=medium
 
   [ Tomasz Buchert ]
