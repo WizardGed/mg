@@ -11,7 +11,7 @@ License: public-domain
 
 Files: debian/*
 Copyright: Copyright 2005, Trent W. Buck
-License: other
+License: MIT
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the
  "Software"), to deal in the Software without restriction, including
@@ -33,7 +33,7 @@ License: other
 
 Files: theo.c
 Copyright: Copyright (c) 2002 Artur Grabowski <art@openbsd.org>
-License: BSD-2-clause
+License: non-standard-bsd-2-clause
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions
  are met:
@@ -53,10 +53,13 @@ License: BSD-2-clause
  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Comment:
+ This license permits redistribution in binary forms without retaining
+ the copyright notice.
 
 Files: undo.c
 Copyright: Copyright (c) 2002 Vincent Labrecque <vincent@openbsd.org>
-License: other
+License: BSD-2-clause
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions
  are met:
