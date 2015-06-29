@@ -3,7 +3,7 @@ Section: editors
 Priority: optional
 Maintainer: Harald Dunkel <harri@afaics.de>
 Uploaders: Tomasz Buchert <tomasz@debian.org>
-Build-Depends: debhelper (>= 9), libncurses-dev, libbsd-dev, pkg-config
+Build-Depends: debhelper (>= 9), libbsd-dev, libncurses-dev, pkg-config
 Standards-Version: 3.9.6
 Homepage: http://homepage.boetes.org/software/mg/
 Vcs-Git: git://anonscm.debian.org/collab-maint/mg.git
@@ -11,7 +11,7 @@ Vcs-Browser: http://anonscm.debian.org/gitweb/?p=collab-maint/mg.git
 
 Package: mg
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends}
 Provides: editor
 Description: microscopic GNU Emacs-style editor
  This program is intended to be a small, fast, and portable
