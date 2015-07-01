@@ -7,7 +7,7 @@ Build-Depends: debhelper (>= 9), libbsd-dev, libncurses-dev, pkg-config
 Standards-Version: 3.9.6
 Homepage: http://homepage.boetes.org/software/mg/
 Vcs-Git: git://anonscm.debian.org/collab-maint/mg.git
-Vcs-Browser: http://anonscm.debian.org/gitweb/?p=collab-maint/mg.git
+Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/mg.git
 
 Package: mg
 Architecture: any
