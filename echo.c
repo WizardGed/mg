@@ -1,4 +1,4 @@
-/*	$OpenBSD: echo.c,v 1.58 2015/03/19 21:22:15 bcallah Exp $	*/
+/*	$OpenBSD: echo.c,v 1.65 2015/12/05 02:14:02 jsg Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -22,10 +22,12 @@
 #include "key.h"
 #include "macro.h"
 
-static char	*veread(const char *, char *, size_t, int, va_list);
+static char	*veread(const char *, char *, size_t, int, va_list)
+			__attribute__((__format__ (printf, 1, 0)));
 static int	 complt(int, int, char *, size_t, int, int *);
 static int	 complt_list(int, char *, int);
-static void	 eformat(const char *, va_list);
+static void	 eformat(const char *, va_list)
+			__attribute__((__format__ (printf, 1, 0)));;
 static void	 eputi(int, int);
 static void	 eputl(long, int);
 static void	 eputs(const char *);
@@ -64,12 +66,18 @@ eyorn(const char *sp)
 	ewprintf("%s? (y or n) ", sp);
 	for (;;) {
 		s = getkey(FALSE);
-		if (s == 'y' || s == 'Y' || s == ' ')
+		if (s == 'y' || s == 'Y' || s == ' ') {
+			ewprintf("");
 			return (TRUE);
-		if (s == 'n' || s == 'N' || s == CCHR('M'))
+		}
+		if (s == 'n' || s == 'N' || s == CCHR('M')) {
+			ewprintf("");
 			return (FALSE);
-		if (s == CCHR('G'))
+		}
+		if (s == CCHR('G')) {
+			ewprintf("");
 			return (ctrlg(FFRAND, 1));
+		}
 		ewprintf("Please answer y or n.  %s? (y or n) ", sp);
 	}
 	/* NOTREACHED */
@@ -92,14 +100,22 @@ eynorr(const char *sp)
 	ewprintf("%s? (y, n or r) ", sp);
 	for (;;) {
 		s = getkey(FALSE);
-		if (s == 'y' || s == 'Y' || s == ' ')
+		if (s == 'y' || s == 'Y' || s == ' ') {
+			ewprintf("");
 			return (TRUE);
-		if (s == 'n' || s == 'N' || s == CCHR('M'))
+		}
+		if (s == 'n' || s == 'N' || s == CCHR('M')) {
+			ewprintf("");
 			return (FALSE);
-		if (s == 'r' || s == 'R')
+		}
+		if (s == 'r' || s == 'R') {
+			ewprintf("");
 			return (REVERT);
-		if (s == CCHR('G'))
+		}
+		if (s == CCHR('G')) {
+			ewprintf("");
 			return (ctrlg(FFRAND, 1));
+		}
 		ewprintf("Please answer y, n or r.");
 	}
 	/* NOTREACHED */
@@ -120,8 +136,10 @@ eyesno(const char *sp)
 	rep = eread("%s? (yes or no) ", buf, sizeof(buf),
 	    EFNUL | EFNEW | EFCR, sp);
 	for (;;) {
-		if (rep == NULL)
+		if (rep == NULL) {
+			ewprintf("");
 			return (ABORT);
+		}
 		if (rep[0] != '\0') {
 			if (macrodef) {
 				struct line	*lp = maclcur;
@@ -130,15 +148,14 @@ eyesno(const char *sp)
 				maclcur->l_fp = lp->l_fp;
 				free(lp);
 			}
-			if ((rep[0] == 'y' || rep[0] == 'Y') &&
-			    (rep[1] == 'e' || rep[1] == 'E') &&
-			    (rep[2] == 's' || rep[2] == 'S') &&
-			    (rep[3] == '\0'))
+			if (strcasecmp(rep, "yes") == 0) {
+				ewprintf("");
 				return (TRUE);
-			if ((rep[0] == 'n' || rep[0] == 'N') &&
-			    (rep[1] == 'o' || rep[0] == 'O') &&
-			    (rep[2] == '\0'))
+			}
+			if (strcasecmp(rep, "no") == 0) {
+				ewprintf("");
 				return (FALSE);
+			}
 		}
 		rep = eread("Please answer yes or no.  %s? (yes or no) ",
 		    buf, sizeof(buf), EFNUL | EFNEW | EFCR, sp);
@@ -154,7 +171,6 @@ eyesno(const char *sp)
  * XXX: When checking for an empty return value, always check rep, *not* buf
  * as buf may be freed in pathological cases.
  */
-/* VARARGS */
 char *
 eread(const char *fmt, char *buf, size_t nbuf, int flag, ...)
 {
@@ -173,11 +189,10 @@ veread(const char *fp, char *buf, size_t nbuf, int flag, va_list ap)
 	int	 dynbuf = (buf == NULL);
 	int	 cpos, epos;		/* cursor, end position in buf */
 	int	 c, i, y;
-	int	 cplflag = FALSE;	/* display completion list */
+	int	 cplflag;		/* display completion list */
 	int	 cwin = FALSE;		/* completion list created */
-	int	 mr = 0;		/* match left arrow */
-	int	 ml = 0;		/* match right arrow */
-	int	 esc = 0;		/* position in esc pattern */
+	int	 mr, ml;		/* match left/right arrows */
+	int	 esc;			/* position in esc pattern */
 	struct buffer	*bp;			/* completion list buffer */
 	struct mgwin	*wp;			/* window for compl list */
 	int	 match;			/* esc match found */
@@ -642,6 +657,7 @@ complt_list(int flags, char *buf, int cpos)
 	bp = bfind("*Completions*", TRUE);
 	if (bclear(bp) == FALSE)
 		return (FALSE);
+	bp->b_flag |= BFREADONLY;
 
 	/*
 	 * First get the list of objects.  This list may contain only
@@ -801,7 +817,6 @@ getxtra(struct list *lp1, struct list *lp2, int cpos, int wflag)
  * line.  The formatting is done by a call to the standard formatting
  * routine.
  */
-/* VARARGS */
 void
 ewprintf(const char *fmt, ...)
 {
@@ -821,9 +836,9 @@ ewprintf(const char *fmt, ...)
 }
 
 /*
- * Printf style formatting. This is called by both "ewprintf" and "ereply"
- * to provide formatting services to their clients.  The move to the start
- * of the echo line, and the erase to the end of the echo line, is done by
+ * Printf style formatting. This is called by "ewprintf" to provide
+ * formatting services to its clients.  The move to the start of the
+ * echo line, and the erase to the end of the echo line, is done by
  * the caller. 
  * %c prints the "name" of the supplied character.
  * %k prints the name of the current key (and takes no arguments).

@@ -31,21 +31,22 @@ CURSES_LIBS=	-lcurses
 CC?=		gcc
 CFLAGS?=	-O2 -pipe
 CFLAGS+=	-g -Wall
-CPPFLAGS=	-DFKEYS -DREGEX -DXKEYS
+CPPFLAGS=	-DREGEX
+CPPFLAGS+=	-D_GNU_SOURCE
 CPPFLAGS+=	$(BSD_CPPFLAGS) -D__dead=__dead2
 LIBS=		$(CURSES_LIBS) $(BSD_LIBS)
 
 
 OBJS=	autoexec.o basic.o bell.o buffer.o cinfo.o dir.o display.o \
 	echo.o extend.o file.o fileio.o funmap.o help.o kbd.o keymap.o \
-	line.o macro.o main.o match.o modes.o paragraph.o random.o \
+	line.o macro.o main.o match.o modes.o paragraph.o \
 	re_search.o region.o search.o spawn.o tty.o ttyio.o ttykbd.o \
-	undo.o version.o window.o word.o yank.o
+	undo.o util.c version.o window.o word.o yank.o
 OBJS+=	cmode.o cscope.o dired.o grep.o tags.o theo.o
 
 
 # # Portability stuff.
-CFLAGS+= 	 -Wno-strict-aliasing
+CFLAGS+= 	 -Wno-strict-aliasing -Wno-deprecated-declarations
 EXE_EXT=
 
 .c.o:

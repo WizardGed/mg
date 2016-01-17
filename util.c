@@ -1,4 +1,4 @@
-/*	$OpenBSD: random.c,v 1.35 2015/03/19 21:22:15 bcallah Exp $	*/
+/*	$OpenBSD: util.c,v 1.38 2015/11/18 18:21:06 jasper Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -68,7 +68,6 @@ showcpos(int f, int n)
 		++row;
 		clp = lforw(clp);
 	}
-	/* NOSTRICT */
 	ratio = nchar ? (100L * cchar) / nchar : 100;
 	ewprintf("Char: %c (0%o)  point=%ld(%d%%)  line=%d  row=%d  col=%d",
 	    cbyte, cbyte, cchar, ratio, cline, row, getcolpos(curwp));
@@ -118,6 +117,9 @@ twiddle(int f, int n)
 	struct line	*dotp;
 	int	 doto, cr;
 
+	if (n == 0)
+		return (TRUE);
+
 	dotp = curwp->w_dotp;
 	doto = curwp->w_doto;
 
@@ -144,7 +146,7 @@ twiddle(int f, int n)
 			lnewline();
 			linsert(1, cr);
 			(void)backdel(FFRAND, 1);
-		} else {	/* twiddle is elsewhere in line */	
+		} else {	/* twiddle is elsewhere in line */
 			cr = lgetc(dotp, doto - 1);
 			(void)backdel(FFRAND, 1);
 			(void)forwchar(FFRAND, 1);
