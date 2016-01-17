@@ -6,16 +6,16 @@ Subject: Use hardening CPPFLAGS
  GNUmakefile | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/GNUmakefile b/GNUmakefile
-index 619e294..f670deb 100644
---- a/GNUmakefile
-+++ b/GNUmakefile
+Index: mg/GNUmakefile
+===================================================================
+--- mg.orig/GNUmakefile
++++ mg/GNUmakefile
 @@ -31,7 +31,7 @@ CURSES_LIBS=	-lcurses
  CC?=		gcc
  CFLAGS?=	-O2 -pipe
  CFLAGS+=	-g -Wall
--CPPFLAGS=	-DFKEYS -DREGEX -DXKEYS
-+CPPFLAGS+=	-DFKEYS -DREGEX -DXKEYS
+-CPPFLAGS=	-DREGEX
++CPPFLAGS+=	-DREGEX
+ CPPFLAGS+=	-D_GNU_SOURCE
  CPPFLAGS+=	$(BSD_CPPFLAGS) -D__dead=__dead2
  LIBS=		$(CURSES_LIBS) $(BSD_LIBS)
- 

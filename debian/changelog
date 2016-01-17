@@ -1,3 +1,11 @@
+mg (20160115-1) experimental; urgency=medium
+
+  * import new upstream version 20160115
+  * refresh patches
+  * keep old modification time for backup (closes: #635772)
+
+ -- Harald Dunkel <harri@afaics.de>  Sun, 17 Jan 2016 14:44:07 +0100
+
 mg (20150323-2) unstable; urgency=medium
 
   * Upload to unstable
