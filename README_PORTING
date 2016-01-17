@@ -37,3 +37,7 @@ This code is the cvs checkout from the OpenBSD project so if you install
 cvs you can see what I changed to port mg. Like this:
 
    cvs diff -uw
+
+ABOUT fgetln()
+
+http://niallohiggins.com/2009/10/03/read-a-file-line-by-line-in-c-secure-fgets-idiom/

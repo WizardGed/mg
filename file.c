@@ -1,4 +1,4 @@
-/*	$OpenBSD: file.c,v 1.96 2015/03/19 21:22:15 bcallah Exp $	*/
+/*	$OpenBSD: file.c,v 1.100 2016/01/02 10:39:19 lum Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -45,10 +45,10 @@ fileinsert(int f, int n)
 }
 
 /*
- * Select a file for editing.  Look around to see if you can find the file
- * in another buffer; if you can find it, just switch to the buffer.  If
- * you cannot find the file, create a new buffer, read in the text, and
- * switch to the new buffer.
+ * Select a file for editing.  If the file is a directory, invoke dired.
+ * Otherwise, look around to see if you can find the file in another buffer;
+ * if you can find it, just switch to the buffer.  If you cannot find the
+ * file, create a new buffer, read in the text, and switch to the new buffer.
  */
 /* ARGSUSED */
 int
@@ -69,6 +69,8 @@ filevisit(int f, int n)
 	adjf = adjustname(fname, TRUE);
 	if (adjf == NULL)
 		return (FALSE);
+	if (fisdir(adjf) == TRUE)
+		return (do_dired(adjf));
 	if ((bp = findbuffer(adjf)) == NULL)
 		return (FALSE);
 	curbp = bp;
@@ -92,9 +94,7 @@ filevisit(int f, int n)
 int
 filevisitalt(int f, int n)
 {
-	struct buffer	*bp;
-	char	 fname[NFILEN], *bufp, *adjf;
-	int	 status;
+	char	 fname[NFILEN], *bufp;
 
 	if (getbufcwd(fname, sizeof(fname)) != TRUE)
 		fname[0] = '\0';
@@ -105,13 +105,25 @@ filevisitalt(int f, int n)
 	else if (bufp[0] == '\0')
 		return (FALSE);
 
+	return (do_filevisitalt(fname));
+}
+
+int
+do_filevisitalt(char *fn)
+{
+	struct buffer	*bp;
+	int		 status;
+	char		*adjf;
+
 	status = killbuffer(curbp);
 	if (status == ABORT || status == FALSE)
 		return (ABORT);
 
-	adjf = adjustname(fname, TRUE);
+	adjf = adjustname(fn, TRUE);
 	if (adjf == NULL)
 		return (FALSE);
+	if (fisdir(adjf) == TRUE)
+		return (do_dired(adjf));
 	if ((bp = findbuffer(adjf)) == NULL)
 		return (FALSE);
 	curbp = bp;
@@ -160,6 +172,8 @@ poptofile(int f, int n)
 	adjf = adjustname(fname, TRUE);
 	if (adjf == NULL)
 		return (FALSE);
+	if (fisdir(adjf) == TRUE)
+		return (do_dired(adjf));
 	if ((bp = findbuffer(adjf)) == NULL)
 		return (FALSE);
 	if (bp == curbp)
@@ -551,10 +565,7 @@ filewrite(int f, int n)
 /*
  * Save the contents of the current buffer back into its associated file.
  */
-#ifndef	MAKEBACKUP
-#define	MAKEBACKUP TRUE
-#endif /* !MAKEBACKUP */
-static int	makebackup = MAKEBACKUP;
+static int	makebackup = TRUE;
 
 /* ARGSUSED */
 int
@@ -742,4 +753,18 @@ xbasename(char *bp, const char *path, size_t bplen)
 
 	(void)strlcpy(ts, path, NFILEN);
 	return (strlcpy(bp, basename(ts), bplen));
+}
+
+/*
+ * The adjusted file name refers to a directory, so open dired mode.
+ */
+int
+do_dired(char *adjf)
+{
+	struct buffer	*bp;
+
+	if ((bp = dired_(adjf)) == FALSE)
+		return (FALSE);
+	curbp = bp;
+	return (showbuffer(bp, curwp, WFFULL | WFMODE));
 }

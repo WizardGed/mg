@@ -1,4 +1,4 @@
-/*	$OpenBSD: main.c,v 1.75 2015/03/19 21:22:15 bcallah Exp $	*/
+/*	$OpenBSD: main.c,v 1.81 2015/12/24 09:07:47 lum Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -42,7 +42,7 @@ extern void     closetags(void);
 static __dead void
 usage()
 {
-	fprintf(stderr, "usage: %s [-n] [-f mode] [+number] [file ...]\n",
+	fprintf(stderr, "usage: %s [-nR] [-f mode] [+number] [file ...]\n",
 	    __progname);
 	exit(1);
 }
@@ -53,11 +53,18 @@ main(int argc, char **argv)
 	char		*cp, *init_fcn_name = NULL;
 	PF		 init_fcn = NULL;
 	int	 	 o, i, nfiles;
-	int	  	 nobackups = 0;
+	int	  	 nobackups = 0, bro = 0;
 	struct buffer	*bp = NULL;
 
-	while ((o = getopt(argc, argv, "nf:")) != -1)
+        /* This feature is new in OpenBSD 5.9 */
+	/* if (pledge("stdio rpath wpath cpath fattr getpw tty proc exec", NULL) == -1) */
+	/* 	err(1, "pledge"); */
+
+	while ((o = getopt(argc, argv, "nRf:")) != -1)
 		switch (o) {
+		case 'R':
+			bro = 1;
+			break;
 		case 'n':
 			nobackups = 1;
 			break;
@@ -115,7 +122,7 @@ main(int argc, char **argv)
 	if ((cp = startupfile(NULL)) != NULL)
 		(void)load(cp);
 
-	/* 
+	/*
 	 * Now ensure any default buffer modes from the startup file are
 	 * given to any files opened when parsing the startup file.
 	 * Note *scratch* will also be updated.
@@ -150,6 +157,10 @@ notnum:
 				if (nfiles == 1)
 					splitwind(0, 1);
 
+				if (fisdir(cp) == TRUE) {
+					(void)do_dired(cp);
+					continue;
+				}
 				if ((curbp = findbuffer(cp)) == NULL) {
 					vttidy();
 					errx(1, "Can't find current buffer!");
@@ -163,6 +174,8 @@ notnum:
 						init_fcn(FFOTHARG, 1);
 					nfiles++;
 				}
+				if (bro)
+					curbp->b_flag |= BFREADONLY;
 			}
 		}
 	}

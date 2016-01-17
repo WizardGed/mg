@@ -1,4 +1,4 @@
-/*	$OpenBSD: kbd.c,v 1.27 2015/03/19 21:22:15 bcallah Exp $	*/
+/*	$OpenBSD: kbd.c,v 1.30 2015/09/26 21:51:58 jasper Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -15,14 +15,10 @@
 #include "key.h"
 #include "macro.h"
 
-#ifndef METABIT
 #define METABIT 0x80
-#endif /* !METABIT */
 
-#ifndef NO_DPROMPT
 #define PROMPTL 80
 char	 prompt[PROMPTL] = "", *promptp = prompt;
-#endif /* !NO_DPROMPT */
 
 static int mgwrap(PF, int, int);
 
@@ -79,7 +75,6 @@ getkey(int flag)
 {
 	int	 c;
 
-#ifndef NO_DPROMPT
 	if (flag && !pushed) {
 		if (prompt[0] != '\0' && ttwait(2000)) {
 			/* avoid problems with % */
@@ -91,7 +86,6 @@ getkey(int flag)
 		if (promptp > prompt)
 			*(promptp - 1) = ' ';
 	}
-#endif /* !NO_DPROMPT */
 	if (pushed) {
 		c = pushedc;
 		pushed = FALSE;
@@ -109,14 +103,12 @@ getkey(int flag)
 		pushed = TRUE;
 		c = CCHR('[');
 	}
-#ifndef NO_DPROMPT
 	if (flag && promptp < &prompt[PROMPTL - 5]) {
 		promptp = getkeyname(promptp,
 		    sizeof(prompt) - (promptp - prompt) - 1, c);
 		*promptp++ = '-';
 		*promptp = '\0';
 	}
-#endif /* !NO_DPROMPT */
 	return (c);
 }
 
@@ -153,9 +145,7 @@ doin(void)
 	KEYMAP	*curmap;
 	PF	 funct;
 
-#ifndef NO_DPROMPT
 	*(promptp = prompt) = '\0';
-#endif /* !NO_DPROMPT */
 	curmap = curbp->b_modes[curbp->b_nmodes]->p_map;
 	key.k_count = 0;
 	while ((funct = doscan(curmap, (key.k_chars[key.k_count++] =
@@ -424,7 +414,7 @@ static int
 mgwrap(PF funct, int f, int n)
 {
 	static	 PF ofp;
-	
+
 	if (funct != rescan &&
 	    funct != negative_argument &&
 	    funct != digit_argument &&
@@ -435,6 +425,6 @@ mgwrap(PF funct, int f, int n)
 			rptcount = 0;
 		ofp = funct;
 	}
-	
+
 	return ((*funct)(f, n));
 }
