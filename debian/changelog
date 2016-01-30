@@ -1,8 +1,14 @@
+mg (20160118-1) unstable; urgency=medium
+
+  * new upstream
+  * drop GNU_SOURCE patch, applied upstream
+
+ -- Harald Dunkel <harri@afaics.de>  Sat, 30 Jan 2016 11:01:58 +0100
+
 mg (20160115-1) experimental; urgency=medium
 
   * import new upstream version 20160115
   * refresh patches
-  * keep old modification time for backup (closes: #635772)
 
  -- Harald Dunkel <harri@afaics.de>  Sun, 17 Jan 2016 14:44:07 +0100
 
