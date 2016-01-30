@@ -1,3 +1,9 @@
+mg (20160118-2) experimental; urgency=medium
+
+  * new patch 0003-Keep-mtime-for-backup.patch (closes: #635772)
+
+ -- Harald Dunkel <harri@afaics.de>  Sat, 30 Jan 2016 11:28:17 +0100
+
 mg (20160118-1) unstable; urgency=medium
 
   * new upstream
