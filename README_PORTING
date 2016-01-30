@@ -3,7 +3,7 @@ PORTING MG AND USING LIBBSD
 I've maintained and ported mg for quite some time now and at first it
 was easy recently it got harder and harder since it was a moving
 target. Especially the inclusion of some system specific libraries since
-about 2 years ago made it to much of an effort for my humble coding
+about 2 years ago made it too much of an effort for my humble coding
 skills.
 
 So recently Jasper Lievisse Adriaanse asked me to try it again and I
