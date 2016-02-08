@@ -1,3 +1,12 @@
+mg (20160118-2) unstable; urgency=medium
+
+  * 0003-Keep-mtime-for-backup.patch: keep old modification time for
+    backup (closes: #635772)
+  * #658539 has been resolved upstream (closes: #658539)
+  * Peter's patch was accepted upstream (closes: #661732)
+
+ -- Harald Dunkel <harri@afaics.de>  Mon, 08 Feb 2016 12:37:58 +0100
+
 mg (20160118-1) unstable; urgency=medium
 
   * new upstream
