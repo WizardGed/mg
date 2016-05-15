@@ -1,3 +1,11 @@
+mg (20160421-1) unstable; urgency=medium
+
+  * Imported Upstream version 20160421
+  * d/patches: dropped patch merged upstream
+  * d/control: bumped Standards-Version to 3.9.8 (no changes needed)
+
+ -- Tomasz Buchert <tomasz@debian.org>  Sun, 15 May 2016 10:44:08 +0200
+
 mg (20160118-2) unstable; urgency=medium
 
   * 0003-Keep-mtime-for-backup.patch: keep old modification time for
