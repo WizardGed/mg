@@ -13,7 +13,7 @@ libdir=		$(prefix)/lib
 includedir=	$(prefix)/include
 mandir=		$(prefix)/man
 
-PKG_CONFIG=	/usr/bin/pkg-config
+PKG_CONFIG=	/usr/bin/pkg-config --silence-errors
 INSTALL=	/usr/bin/install
 STRIP=		/usr/bin/strip
 
@@ -22,11 +22,21 @@ ifeq ($(UNAME),FreeBSD)
   BSD_CPPFLAGS:=
   BSD_LIBS:=	-lutil
 else
-  BSD_CPPFLAGS:=$(shell $(PKG_CONFIG) --cflags libbsd-overlay)
-  BSD_LIBS:=	$(shell $(PKG_CONFIG) --libs libbsd-overlay)
+  BSD_CPPFLAGS:= $(shell $(PKG_CONFIG) --cflags libbsd-overlay)
+  BSD_LIBS:=	 $(shell $(PKG_CONFIG) --libs libbsd-overlay)
 endif
 
-CURSES_LIBS=	-lcurses
+# Test is some required libraries are installed. Rather bummer that
+# they are also required to run make clean or uninstall. Oh well... Who
+# does that?
+ifeq ($(BSD_LIBS),)
+  $(error You probably need to install "libbsd-dev" or "libbsd-devel" or something like that.)
+endif
+
+CURSES_LIBS:= $(shell $(PKG_CONFIG) --libs ncurses)
+ifeq ($(CURSES_LIBS),)
+  $(error You probably need to install "libncurses5-dev" or "libnnurses6-devel" or something like that.)
+endif
 
 CC?=		gcc
 CFLAGS?=	-O2 -pipe
@@ -45,7 +55,7 @@ OBJS=	autoexec.o basic.o bell.o buffer.o cinfo.o dir.o display.o \
 OBJS+=	cmode.o cscope.o dired.o grep.o tags.o theo.o
 
 
-# # Portability stuff.
+# Portability stuff.
 CFLAGS+= 	 -Wno-strict-aliasing -Wno-deprecated-declarations
 EXE_EXT=
 
