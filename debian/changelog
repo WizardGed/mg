@@ -1,3 +1,9 @@
+mg (20160912-1) unstable; urgency=medium
+
+  * New upstream version 20160912
+
+ -- Tomasz Buchert <tomasz@debian.org>  Sun, 18 Sep 2016 19:42:00 +0200
+
 mg (20160421-1) unstable; urgency=medium
 
   * Imported Upstream version 20160421
