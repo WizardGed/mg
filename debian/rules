@@ -6,7 +6,7 @@ DH_VERBOSE=1
 MAKE_VARS=DESTDIR=debian/mg prefix=/usr mandir=/usr/share/man CURSES_LIBS=-ltinfo
 
 %:
-	dh $@ --parallel
+	dh $@
 
 override_dh_auto_build:
 	$(MAKE) $(MAKE_VARS)
