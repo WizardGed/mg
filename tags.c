@@ -1,9 +1,9 @@
-/*	$OpenBSD: tags.c,v 1.12 2015/12/31 12:06:48 sunil Exp $	*/
+/*	$OpenBSD: tags.c,v 1.14 2016/09/01 10:01:53 sunil Exp $	*/
 
 /*
  * This file is in the public domain.
  *
- * Author: Sunil Nimmagadda <sunil@sunilnimmagadda.com>
+ * Author: Sunil Nimmagadda <sunil@openbsd.org>
  */
 
 #include <sys/queue.h>
@@ -92,6 +92,8 @@ tagsvisit(int f, int n)
 	
 	bufp = eread("visit tags table (default %s): ", fname,
 	    NFILEN, EFFILE | EFCR | EFNEW | EFDEF, DEFAULTFN);
+	if (bufp == NULL)
+		return (ABORT);
 
 	if (stat(bufp, &sb) == -1) {
 		dobeep();
@@ -108,9 +110,7 @@ tagsvisit(int f, int n)
 	}
 	
 	if (tagsfn == NULL) {
-		if (bufp == NULL)
-			return (ABORT);
-		else if (bufp[0] == '\0') {
+		if (bufp[0] == '\0') {
 			if ((tagsfn = strdup(fname)) == NULL) {
 				dobeep();
 				ewprintf("Out of memory");
