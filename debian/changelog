@@ -1,3 +1,10 @@
+mg (20170401-1) unstable; urgency=medium
+
+  * new upstream
+  * delete 0003-Keep-mtime-for-backup.patch, applied upstream
+
+ -- Harald Dunkel <harri@afaics.de>  Wed, 05 Apr 2017 10:35:57 +0200
+
 mg (20160118-2) experimental; urgency=medium
 
   * new patch 0003-Keep-mtime-for-backup.patch (closes: #635772)
