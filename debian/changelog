@@ -1,6 +1,7 @@
 mg (20170828-1) unstable; urgency=medium
 
   * new upstream version 20170828
+  * Bumped std-ver to 4.0.0 (no changes needed)
 
  -- Harald Dunkel <harri@afaics.de>  Wed, 30 Aug 2017 06:48:53 +0200
 
