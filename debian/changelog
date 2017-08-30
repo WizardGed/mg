@@ -1,15 +1,37 @@
 mg (20170401-1) unstable; urgency=medium
 
-  * new upstream
-  * delete 0003-Keep-mtime-for-backup.patch, applied upstream
+  * new upstream version 20170401
 
- -- Harald Dunkel <harri@afaics.de>  Wed, 05 Apr 2017 10:35:57 +0200
+ -- Harald Dunkel <harri@afaics.de>  Wed, 05 Apr 2017 11:26:46 +0200
 
-mg (20160118-2) experimental; urgency=medium
+mg (20161005-1) unstable; urgency=medium
 
-  * new patch 0003-Keep-mtime-for-backup.patch (closes: #635772)
+  * New upstream version 20161005
 
- -- Harald Dunkel <harri@afaics.de>  Sat, 30 Jan 2016 11:28:17 +0100
+ -- Tomasz Buchert <tomasz@debian.org>  Thu, 13 Oct 2016 09:18:24 +0200
+
+mg (20160912-1) unstable; urgency=medium
+
+  * New upstream version 20160912
+
+ -- Tomasz Buchert <tomasz@debian.org>  Sun, 18 Sep 2016 19:42:00 +0200
+
+mg (20160421-1) unstable; urgency=medium
+
+  * Imported Upstream version 20160421
+  * d/patches: dropped patch merged upstream
+  * d/control: bumped Standards-Version to 3.9.8 (no changes needed)
+
+ -- Tomasz Buchert <tomasz@debian.org>  Sun, 15 May 2016 10:44:08 +0200
+
+mg (20160118-2) unstable; urgency=medium
+
+  * 0003-Keep-mtime-for-backup.patch: keep old modification time for
+    backup (closes: #635772)
+  * #658539 has been resolved upstream (closes: #658539)
+  * Peter's patch was accepted upstream (closes: #661732)
+
+ -- Harald Dunkel <harri@afaics.de>  Mon, 08 Feb 2016 12:37:58 +0100
 
 mg (20160118-1) unstable; urgency=medium
 
@@ -17,13 +39,6 @@ mg (20160118-1) unstable; urgency=medium
   * drop GNU_SOURCE patch, applied upstream
 
  -- Harald Dunkel <harri@afaics.de>  Sat, 30 Jan 2016 11:01:58 +0100
-
-mg (20160115-1) experimental; urgency=medium
-
-  * import new upstream version 20160115
-  * refresh patches
-
- -- Harald Dunkel <harri@afaics.de>  Sun, 17 Jan 2016 14:44:07 +0100
 
 mg (20150323-2) unstable; urgency=medium
 
