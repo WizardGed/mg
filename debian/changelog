@@ -5,7 +5,7 @@ mg (20170828-2) unstable; urgency=medium
     + Pass PKG_CONFIG via MAKE_VARS to make clean
     + Let dh_auto_build pass cross compilers to make
 
- -- Harald Dunkel <harri@afaics.de>  Wed, 30 Aug 2017 18:51:48 +0200
+ -- Harald Dunkel <harri@afaics.de>  Tue, 05 Sep 2017 00:41:48 +0200
 
 mg (20170828-1) unstable; urgency=medium
 
