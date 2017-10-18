@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Harald Dunkel <harri@afaics.de>
 Uploaders: Tomasz Buchert <tomasz@debian.org>
 Build-Depends: debhelper (>= 10), libbsd-dev, libncurses-dev, pkg-config
-Standards-Version: 4.0.0
+Standards-Version: 4.1.0
 Homepage: http://homepage.boetes.org/software/mg/
 Vcs-Git: git://anonscm.debian.org/collab-maint/mg.git
 Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/mg.git
