@@ -1,3 +1,14 @@
+mg (20180927-1) unstable; urgency=medium
+
+  * New upstream version 20180927
+  * d/control: update vcs links to salsa
+  * fix insecure-copyright-format-uri
+  * update watch file
+  * drop obsolete patches
+  * refresh packaging (debhelper 12, std-ver 4.3.0)
+
+ -- Tomasz Buchert <tomasz@debian.org>  Thu, 10 Jan 2019 00:33:22 +0100
+
 mg (20171014-1) unstable; urgency=medium
 
   * new upstream version 20171014
