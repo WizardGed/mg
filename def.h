@@ -1,4 +1,4 @@
-/*	$OpenBSD: def.h,v 1.155 2016/04/14 17:05:32 lum Exp $	*/
+/*	$OpenBSD: def.h,v 1.156 2018/08/29 07:50:16 reyk Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -15,7 +15,7 @@
 
 #include	"chrdef.h"
 
-#if defined(__APPLE__) || defined(__FreeBSD__)
+#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__DragonFly__)
 #  define LOGIN_NAME_MAX _POSIX_LOGIN_NAME_MAX
 #endif
 
@@ -328,6 +328,10 @@ struct undo_rec {
  * Prototypes.
  */
 
+#ifdef __DragonFly__
+void		*reallocarray(void*, size_t, size_t);
+#endif
+
 /* tty.c X */
 void		 ttinit(void);
 void		 ttreinit(void);
@@ -398,6 +402,7 @@ int		 ldelete(RSIZE, int);
 int		 ldelnewline(void);
 int		 lreplace(RSIZE, char *);
 char *		 linetostr(const struct line *);
+int		 setcasereplace(int, int);
 
 /* yank.c X */
 
